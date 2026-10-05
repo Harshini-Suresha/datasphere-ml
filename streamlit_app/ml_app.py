@@ -39,17 +39,83 @@ STORE = {"city": "MySQL", "tenure_days": "MySQL", "n_orders": "MySQL",
 
 
 @st.cache_resource
+def _live_pipes():
+    """Fallback when committed pickles won't unpickle (e.g. newer sklearn
+    on the host): regenerate fast data and train small RF models live."""
+    import sys as _sys
+    _sys.path.insert(0, str(HERE.parent))
+    import train_models as _T
+    from sklearn.ensemble import (RandomForestClassifier as _RFC,
+                                  RandomForestRegressor as _RFR)
+    from sklearn.metrics import (accuracy_score as _acc, f1_score as _f1,
+                                 mean_absolute_error as _mae, r2_score as _r2,
+                                 roc_auc_score as _auc)
+    from sklearn.model_selection import train_test_split as _tts
+    from sklearn.pipeline import Pipeline as _Pipe
+    cust = _T.gen_customers(n=2000)
+    ords = _T.gen_orders(cust, 8000)
+    revs = _T.gen_reviews(cust, 5000)
+    fc = ["city", "tenure_days", "degree", "pagerank", "n_orders",
+          "avg_amount", "recency_days", "n_categories", "n_reviews", "fav_category"]
+    fo = ["tenure_days", "past_avg", "degree", "pagerank", "recency_days",
+          "month", "day_of_week", "category"]
+    fr = ["price", "category", "reviewer_n_reviews", "reviewer_avg_stars",
+          "reviewer_pagerank", "reviewer_recency"]
+    out = {}
+    Xtr, Xte, ytr, yte = _tts(cust[fc], cust["high_value"], test_size=0.2,
+                              stratify=cust["high_value"], random_state=7)
+    pc = _Pipe([("enc", _T.enc(Xtr, ["city", "fav_category"])),
+                ("m", _RFC(n_estimators=60, n_jobs=-1, random_state=7))])
+    pc.fit(Xtr, ytr)
+    pr = pc.predict_proba(Xte)[:, 1]
+    out["pc"], out["mc"] = pc, {"rf_live": {
+        "roc_auc": round(float(_auc(yte, pr)), 4),
+        "f1": round(float(_f1(yte, pr > 0.5)), 4),
+        "accuracy": round(float(_acc(yte, pr > 0.5)), 4)}}
+    Xtr, Xte, ytr, yte = _tts(ords[fo], ords["amount"], test_size=0.2, random_state=7)
+    pa = _Pipe([("enc", _T.enc(Xtr, ["category"])),
+                ("m", _RFR(n_estimators=60, n_jobs=-1, random_state=7))])
+    pa.fit(Xtr, ytr)
+    pr = pa.predict(Xte)
+    out["pa"], out["ma"] = pa, {"rf_live": {
+        "rmse": round(float((yte - pr).std()), 2),
+        "mae": round(float(_mae(yte, pr)), 2),
+        "r2": round(float(_r2(yte, pr)), 4)}}
+    out["rs"] = round(float((yte - pr).std()), 2)
+    Xtr, Xte, ytr, yte = _tts(revs[fr], revs["stars"] - 1, test_size=0.2,
+                              stratify=revs["stars"], random_state=7)
+    pr_ = _Pipe([("enc", _T.enc(Xtr, ["category"])),
+                 ("m", _RFC(n_estimators=60, n_jobs=-1, random_state=7))])
+    pr_.fit(Xtr, ytr)
+    pr = pr_.predict(Xte)
+    out["pr"], out["mr"] = pr_, {"rf_live": {
+        "accuracy": round(float(_acc(yte, pr)), 4),
+        "f1_macro": round(float(_f1(yte, pr, average="macro")), 4)}}
+    return out
+
+
+@st.cache_resource
 def load_all():
     metrics = json.loads((MODELS / "metrics.json").read_text())
     extra = {}
     for name in ("calibration", "shap", "distributions"):
         p = MODELS / f"{name}.json"
         extra[name] = json.loads(p.read_text()) if p.exists() else None
-    return (metrics,
-            joblib.load(MODELS / "model_customer.pkl"),
-            joblib.load(MODELS / "model_amount.pkl"),
-            joblib.load(MODELS / "model_rating.pkl"),
-            extra)
+    try:
+        return (metrics,
+                joblib.load(MODELS / "model_customer.pkl"),
+                joblib.load(MODELS / "model_amount.pkl"),
+                joblib.load(MODELS / "model_rating.pkl"),
+                extra, False)
+    except Exception:
+        fb = _live_pipes()
+        live_metrics = dict(metrics)
+        live_metrics["customer"] = {"models": fb["mc"], "best": "rf_live"}
+        live_metrics["amount"] = {"models": fb["ma"], "best": "rf_live",
+                                  "resid_std": fb["rs"]}
+        live_metrics["rating"] = {"models": fb["mr"], "best": "rf_live"}
+        live_metrics["live"] = True
+        return (live_metrics, fb["pc"], fb["pa"], fb["pr"], extra, True)
 
 
 def importances(pipe, top_n=8):
@@ -68,10 +134,15 @@ def importances(pipe, top_n=8):
 
 
 try:
-    metrics, m_cust, m_amt, m_rate, extra = load_all()
+    metrics, m_cust, m_amt, m_rate, extra, _live = load_all()
 except Exception as e:
     st.error(f"Models not found — run `python train_models.py` first. ({e})")
     st.stop()
+
+if _live:
+    st.warning("Committed models would not load in this Python (version drift), "
+               "so small models were trained live here instead — predictions work, "
+               "tables show this session's test metrics.")
 
 st.title("DataSphere ML — predictions across three databases")
 st.caption(f"Trained {metrics['generated']} · seed {metrics['seed']} · "
