@@ -139,11 +139,6 @@ except Exception as e:
     st.error(f"Models not found — run `python train_models.py` first. ({e})")
     st.stop()
 
-if _live:
-    st.warning("Committed models would not load in this Python (version drift), "
-               "so small models were trained live here instead — predictions work, "
-               "tables show this session's test metrics.")
-
 st.title("DataSphere ML — predictions across three databases")
 st.caption(f"Trained {metrics['generated']} · seed {metrics['seed']} · "
            f"{metrics['n_customers']} customers / {metrics['n_orders']} orders / "
