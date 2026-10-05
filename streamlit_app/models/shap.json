@@ -1,0 +1,140 @@
+{
+ "customer": {
+  "features": [
+   "remainder__n_orders",
+   "remainder__avg_amount",
+   "remainder__recency_days",
+   "remainder__n_reviews",
+   "remainder__degree",
+   "remainder__pagerank",
+   "remainder__n_categories",
+   "cat__city_London",
+   "remainder__tenure_days",
+   "cat__city_Bengaluru",
+   "cat__fav_category_Electronics",
+   "cat__city_Pune"
+  ],
+  "mean_abs": [
+   0.16247,
+   0.09396,
+   0.01527,
+   0.0147,
+   0.01186,
+   0.01171,
+   0.007,
+   0.00658,
+   0.00619,
+   0.00236,
+   0.00225,
+   0.00208
+  ],
+  "example": {
+   "features": [
+    "cat__city_Austin",
+    "cat__city_Bengaluru",
+    "cat__city_Berlin",
+    "cat__city_Lagos",
+    "cat__city_London",
+    "cat__city_Pune",
+    "cat__fav_category_Beauty",
+    "cat__fav_category_Books",
+    "cat__fav_category_Electronics",
+    "cat__fav_category_Home",
+    "cat__fav_category_Shoes",
+    "cat__fav_category_Sports",
+    "remainder__tenure_days",
+    "remainder__degree",
+    "remainder__pagerank",
+    "remainder__n_orders",
+    "remainder__avg_amount",
+    "remainder__recency_days",
+    "remainder__n_categories",
+    "remainder__n_reviews"
+   ],
+   "values": [
+    -0.00051,
+    0.00047,
+    -0.0004,
+    -0.00173,
+    -0.00308,
+    -0.00085,
+    -0.00081,
+    0.00493,
+    -0.00088,
+    0.00027,
+    -0.00065,
+    -5e-05,
+    -0.00204,
+    -0.00933,
+    -0.00951,
+    -0.10992,
+    -0.04382,
+    -0.0143,
+    -0.00044,
+    -0.0075
+   ]
+  }
+ },
+ "amount": {
+  "features": [
+   "cat__category_Electronics",
+   "remainder__past_avg",
+   "remainder__month",
+   "cat__category_Books",
+   "remainder__tenure_days",
+   "cat__category_Sports",
+   "cat__category_Beauty",
+   "remainder__day_of_week",
+   "remainder__recency_days",
+   "cat__category_Home",
+   "remainder__degree",
+   "cat__category_Shoes"
+  ],
+  "mean_abs": [
+   12.90011,
+   10.34657,
+   5.25492,
+   4.84986,
+   1.96344,
+   1.52943,
+   1.52499,
+   1.39472,
+   0.48477,
+   0.39706,
+   0.30731,
+   0.21599
+  ],
+  "example": {
+   "features": [
+    "cat__category_Beauty",
+    "cat__category_Books",
+    "cat__category_Electronics",
+    "cat__category_Home",
+    "cat__category_Shoes",
+    "cat__category_Sports",
+    "remainder__tenure_days",
+    "remainder__past_avg",
+    "remainder__degree",
+    "remainder__pagerank",
+    "remainder__recency_days",
+    "remainder__month",
+    "remainder__day_of_week"
+   ],
+   "values": [
+    0.7306,
+    1.62817,
+    36.926,
+    -0.07901,
+    0.21263,
+    -0.49692,
+    -0.9718,
+    8.02433,
+    -1.57762,
+    -0.41898,
+    -0.73424,
+    -2.10908,
+    -0.63817
+   ]
+  }
+ }
+}

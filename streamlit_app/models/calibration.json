@@ -1,0 +1,258 @@
+{
+ "overall": [
+  {
+   "bin_mid": 0.05,
+   "n": 594,
+   "mean_pred": 0.0289,
+   "observed": 0.0051
+  },
+  {
+   "bin_mid": 0.15,
+   "n": 99,
+   "mean_pred": 0.1513,
+   "observed": 0.1515
+  },
+  {
+   "bin_mid": 0.25,
+   "n": 68,
+   "mean_pred": 0.2473,
+   "observed": 0.1618
+  },
+  {
+   "bin_mid": 0.35,
+   "n": 47,
+   "mean_pred": 0.3459,
+   "observed": 0.4894
+  },
+  {
+   "bin_mid": 0.45,
+   "n": 24,
+   "mean_pred": 0.4546,
+   "observed": 0.4583
+  },
+  {
+   "bin_mid": 0.55,
+   "n": 33,
+   "mean_pred": 0.5445,
+   "observed": 0.6364
+  },
+  {
+   "bin_mid": 0.65,
+   "n": 35,
+   "mean_pred": 0.6529,
+   "observed": 0.8571
+  },
+  {
+   "bin_mid": 0.75,
+   "n": 33,
+   "mean_pred": 0.7391,
+   "observed": 0.7576
+  },
+  {
+   "bin_mid": 0.85,
+   "n": 43,
+   "mean_pred": 0.859,
+   "observed": 0.8837
+  },
+  {
+   "bin_mid": 0.95,
+   "n": 24,
+   "mean_pred": 0.9377,
+   "observed": 0.9583
+  }
+ ],
+ "by_fav_category": {
+  "Shoes": [
+   {
+    "bin_mid": 0.1,
+    "n": 120,
+    "mean_pred": 0.0556,
+    "observed": 0.0167
+   },
+   {
+    "bin_mid": 0.3,
+    "n": 15,
+    "mean_pred": 0.302,
+    "observed": 0.6
+   },
+   {
+    "bin_mid": 0.5,
+    "n": 8,
+    "mean_pred": 0.4888,
+    "observed": 0.625
+   },
+   {
+    "bin_mid": 0.7,
+    "n": 14,
+    "mean_pred": 0.6786,
+    "observed": 0.8571
+   },
+   {
+    "bin_mid": 0.9,
+    "n": 16,
+    "mean_pred": 0.8925,
+    "observed": 0.8125
+   }
+  ],
+  "Electronics": [
+   {
+    "bin_mid": 0.1,
+    "n": 117,
+    "mean_pred": 0.0456,
+    "observed": 0.0171
+   },
+   {
+    "bin_mid": 0.3,
+    "n": 22,
+    "mean_pred": 0.3032,
+    "observed": 0.3182
+   },
+   {
+    "bin_mid": 0.5,
+    "n": 12,
+    "mean_pred": 0.5154,
+    "observed": 0.5833
+   },
+   {
+    "bin_mid": 0.7,
+    "n": 13,
+    "mean_pred": 0.6804,
+    "observed": 0.6154
+   },
+   {
+    "bin_mid": 0.9,
+    "n": 11,
+    "mean_pred": 0.8755,
+    "observed": 1.0
+   }
+  ],
+  "Home": [
+   {
+    "bin_mid": 0.1,
+    "n": 128,
+    "mean_pred": 0.0452,
+    "observed": 0.0391
+   },
+   {
+    "bin_mid": 0.3,
+    "n": 25,
+    "mean_pred": 0.2792,
+    "observed": 0.36
+   },
+   {
+    "bin_mid": 0.5,
+    "n": 10,
+    "mean_pred": 0.5295,
+    "observed": 0.7
+   },
+   {
+    "bin_mid": 0.7,
+    "n": 5,
+    "mean_pred": 0.688,
+    "observed": 1.0
+   },
+   {
+    "bin_mid": 0.9,
+    "n": 8,
+    "mean_pred": 0.8856,
+    "observed": 1.0
+   }
+  ],
+  "Books": [
+   {
+    "bin_mid": 0.1,
+    "n": 109,
+    "mean_pred": 0.0427,
+    "observed": 0.0183
+   },
+   {
+    "bin_mid": 0.3,
+    "n": 17,
+    "mean_pred": 0.2838,
+    "observed": 0.1176
+   },
+   {
+    "bin_mid": 0.5,
+    "n": 7,
+    "mean_pred": 0.495,
+    "observed": 0.5714
+   },
+   {
+    "bin_mid": 0.7,
+    "n": 8,
+    "mean_pred": 0.7213,
+    "observed": 0.875
+   },
+   {
+    "bin_mid": 0.9,
+    "n": 12,
+    "mean_pred": 0.8871,
+    "observed": 0.9167
+   }
+  ],
+  "Beauty": [
+   {
+    "bin_mid": 0.1,
+    "n": 97,
+    "mean_pred": 0.0425,
+    "observed": 0.0412
+   },
+   {
+    "bin_mid": 0.3,
+    "n": 19,
+    "mean_pred": 0.2755,
+    "observed": 0.2632
+   },
+   {
+    "bin_mid": 0.5,
+    "n": 10,
+    "mean_pred": 0.505,
+    "observed": 0.5
+   },
+   {
+    "bin_mid": 0.7,
+    "n": 12,
+    "mean_pred": 0.7067,
+    "observed": 0.75
+   },
+   {
+    "bin_mid": 0.9,
+    "n": 12,
+    "mean_pred": 0.8975,
+    "observed": 0.9167
+   }
+  ],
+  "Sports": [
+   {
+    "bin_mid": 0.1,
+    "n": 122,
+    "mean_pred": 0.0456,
+    "observed": 0.0246
+   },
+   {
+    "bin_mid": 0.3,
+    "n": 17,
+    "mean_pred": 0.2841,
+    "observed": 0.1176
+   },
+   {
+    "bin_mid": 0.5,
+    "n": 10,
+    "mean_pred": 0.4975,
+    "observed": 0.4
+   },
+   {
+    "bin_mid": 0.7,
+    "n": 16,
+    "mean_pred": 0.7003,
+    "observed": 0.875
+   },
+   {
+    "bin_mid": 0.9,
+    "n": 8,
+    "mean_pred": 0.8787,
+    "observed": 0.875
+   }
+  ]
+ }
+}

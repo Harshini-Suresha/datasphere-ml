@@ -1,0 +1,120 @@
+{
+ "generated": "2026-10-05",
+ "seed": 42,
+ "fast": false,
+ "n_customers": 5000,
+ "n_orders": 50000,
+ "n_reviews": 30000,
+ "pos_rate": 0.2,
+ "customer": {
+  "models": {
+   "rf": {
+    "cv_mean": 0.9432,
+    "cv_std": 0.0051,
+    "roc_auc": 0.9558,
+    "f1": 0.7446,
+    "accuracy": 0.906,
+    "fit_s": 2.2
+   },
+   "xgb": {
+    "cv_mean": 0.9465,
+    "cv_std": 0.0017,
+    "roc_auc": 0.9489,
+    "f1": 0.7565,
+    "accuracy": 0.906,
+    "fit_s": 1.1
+   },
+   "lgbm": {
+    "cv_mean": 0.9406,
+    "cv_std": 0.004,
+    "roc_auc": 0.9496,
+    "f1": 0.7354,
+    "accuracy": 0.9,
+    "fit_s": 4.7
+   }
+  },
+  "best": "rf"
+ },
+ "amount": {
+  "models": {
+   "rf": {
+    "cv_mean": 0.6229,
+    "rmse": 18.89,
+    "mae": 13.53,
+    "r2": 0.6276,
+    "fit_s": 9.1
+   },
+   "xgb": {
+    "cv_mean": 0.6501,
+    "rmse": 17.92,
+    "mae": 12.78,
+    "r2": 0.6646,
+    "fit_s": 1.2
+   },
+   "lgbm": {
+    "cv_mean": 0.6465,
+    "rmse": 18.0,
+    "mae": 12.85,
+    "r2": 0.6619,
+    "fit_s": 5.8
+   }
+  },
+  "best": "xgb",
+  "resid_std": 17.92
+ },
+ "rating": {
+  "models": {
+   "rf": {
+    "cv_mean": 0.5065,
+    "accuracy": 0.5013,
+    "f1_macro": 0.2797,
+    "fit_s": 2.2
+   },
+   "xgb": {
+    "cv_mean": 0.5258,
+    "accuracy": 0.5295,
+    "f1_macro": 0.292,
+    "fit_s": 5.3
+   },
+   "lgbm": {
+    "cv_mean": 0.5025,
+    "accuracy": 0.5075,
+    "f1_macro": 0.2903,
+    "fit_s": 25.5
+   }
+  },
+  "best": "xgb"
+ },
+ "features": {
+  "customer": [
+   "city",
+   "tenure_days",
+   "degree",
+   "pagerank",
+   "n_orders",
+   "avg_amount",
+   "recency_days",
+   "n_categories",
+   "n_reviews",
+   "fav_category"
+  ],
+  "amount": [
+   "tenure_days",
+   "past_avg",
+   "degree",
+   "pagerank",
+   "recency_days",
+   "month",
+   "day_of_week",
+   "category"
+  ],
+  "rating": [
+   "price",
+   "category",
+   "reviewer_n_reviews",
+   "reviewer_avg_stars",
+   "reviewer_pagerank",
+   "reviewer_recency"
+  ]
+ }
+}

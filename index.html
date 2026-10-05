@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DataSphere — one dataset, three databases</title>
+<meta name="description" content="Polyglot database architecture across MySQL, MongoDB and Neo4j: SQL analytics, document modelling, graph processing, transactions, security and benchmarks.">
+<meta property="og:title" content="DataSphere: one dataset, three databases"><meta property="og:description" content="MySQL, MongoDB and Neo4j compared with live SQL, aggregation and graph demos."><meta property="og:type" content="website"><meta name="theme-color" content="#fdeef4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{color-scheme:light;--bg:#fdeef4;--surf:#ffffff;--ink:#1d1630;--mut:#64587a;--line:#f0cfdd;--sql:#0072B2;--mongo:#009E73;--neo:#D55E00;--code:#0f1b33;--codeink:#dbe5ff}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background-color:var(--bg);background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(255,255,255,.75),transparent 65%);background-attachment:fixed;color:var(--ink);font:400 17px/1.6 "Bricolage Grotesque",system-ui,sans-serif}
+code,pre{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px}
+a{color:inherit}
+nav{position:sticky;top:0;z-index:5;display:flex;gap:20px;overflow-x:auto;padding:12px 24px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);white-space:nowrap}
+nav b{margin-right:auto;font-weight:800}nav a{text-decoration:none;color:var(--mut);font-size:15px}nav a:hover{color:var(--ink)}
+section{max-width:1080px;margin:0 auto;padding:72px 24px 8px}
+h1{font-size:clamp(44px,8vw,92px);line-height:.98;margin:0 0 20px;font-weight:800;letter-spacing:-.03em}
+h2{font-size:clamp(28px,4vw,42px);line-height:1.1;margin:0 0 10px;letter-spacing:-.02em}
+h3{margin:0 0 6px;font-size:19px}
+p.lead{font-size:20px;color:var(--mut);max-width:62ch}p{max-width:68ch}
+.dot{display:inline-block;width:.6em;height:.6em;border-radius:50%;margin-right:.3em}
+.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));margin-top:24px}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:20px}
+.card h3+p{margin:0 0 12px;color:var(--mut);font-size:15px}
+.chart{position:relative;height:260px}
+.kpis{display:flex;flex-wrap:wrap;gap:36px;margin:32px 0 0}.kpis div{min-width:120px}.kpis b{display:block;font-size:34px;font-weight:800}.kpis span{color:var(--mut);font-size:14px}
+pre{background:var(--code);color:var(--codeink);padding:16px;border-radius:8px;overflow-x:auto;margin:0;line-height:1.55}
+.k{color:#7ea2ff}.s{color:#7ee0b3}.c{color:#7d8bb0}
+.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}.tabs button{font:inherit;font-size:14px;padding:6px 12px;border:1px solid var(--line);background:var(--surf);color:var(--ink);border-radius:6px;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg)}
+.btn{font:inherit;font-weight:600;padding:9px 18px;border:0;border-radius:6px;background:var(--sql);color:#fff;cursor:pointer}.btn:disabled{opacity:.5}
+.steps{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:24px}.step{border-left:3px solid var(--sql);padding:4px 0 4px 14px}.step b{display:block;font-size:26px;color:var(--sql);line-height:1}.step h3{margin:6px 0 4px;font-size:16px}.step p{margin:0;font-size:14px;color:var(--mut)}
+ul.t{margin:0;padding-left:18px;font-size:15px}ul.t li{margin:5px 0}
+.card{box-shadow:0 1px 2px rgba(60,30,70,.06)}.card h3{font-size:17px;line-height:1.25}.fig{display:block;font:500 11px "IBM Plex Mono",monospace;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}.chip{display:inline-block;font:500 10px "IBM Plex Mono",monospace;letter-spacing:.03em;text-transform:uppercase;padding:2px 7px;margin-left:8px;border-radius:99px;vertical-align:middle;background:#fff1d6;color:#8a5a00;border:1px solid #f0d49a}.chip.live{background:#dff5ec;color:#00634a;border-color:#a5dcc8}
+button:focus-visible,a:focus-visible{outline:3px solid var(--sql);outline-offset:2px}
+table{border-collapse:collapse;width:100%;font-size:15px}th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--mut);font-weight:600}
+.y{color:var(--mongo);font-weight:600}.n{color:var(--neo);font-weight:600}
+.wrap{overflow-x:auto}
+.trio{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:12px}.sq{margin:0}.gc{background:#fff;width:100%;aspect-ratio:1/1;display:block;border:1px solid var(--line);border-radius:14px;cursor:crosshair;touch-action:none}.sq figcaption{font-size:14px;color:var(--mut);margin-top:8px;line-height:1.4}
+#graph{width:100%;height:420px;display:block;background:var(--surf);border:1px solid var(--line);border-radius:10px;cursor:crosshair}
+.note{font-size:14px;color:var(--mut);margin-top:10px}
+footer{max-width:1080px;margin:60px auto 40px;padding:0 24px;color:var(--mut);font-size:14px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<nav><b>DataSphere</b><a href="#arch">Architecture</a><a href="#method">Methodology</a><a href="#mysql">MySQL</a><a href="#opt">Optimizer</a><a href="#lab">Live lab</a><a href="#mongo">MongoDB</a><a href="#neo">Neo4j</a><a href="#tx">Transactions</a><a href="#sec">Security</a><a href="#bench">Benchmarks</a><a href="#ml">ML predictions</a></nav>
+
+<section style="padding-top:56px">
+<h1>One dataset.<br>Three databases.</h1>
+<p class="lead">DataSphere stores an e-commerce platform's data where it fits best: orders in MySQL, flexible product and review documents in MongoDB, and the customer–product–friend network in Neo4j. Then it measures what each choice costs.</p>
+<div class="kpis"><div><b style="color:var(--sql)">MySQL</b><span>structured, transactional</span></div><div><b style="color:var(--mongo)">MongoDB</b><span>semi-structured, flexible</span></div><div><b style="color:var(--neo)">Neo4j</b><span>highly connected</span></div></div>
+<h3 style="margin-top:36px">One network, six views: drag a node, click to inspect</h3>
+<div class="trio">
+<figure class="sq"><canvas class="gc" aria-label="Network as a force layout with shaded hub neighbourhoods"></canvas><figcaption><b>(a) Neighbourhoods.</b> Each shaded region holds the customers closest to one top hub. Drag a node to reshape it.</figcaption></figure>
+<figure class="sq"><canvas class="gc" aria-label="Network as concentric influence rings"></canvas><figcaption><b>(b) Influence rings.</b> Distance from the centre shows PageRank tier; node size shows number of links.</figcaption></figure>
+<figure class="sq"><canvas class="gc" aria-label="Network as an arc diagram"></canvas><figcaption><b>(c) Arc diagram.</b> Customers in a line, grouped by hub. Arcs above join customers in the same group; arcs below cross groups.</figcaption></figure>
+<figure class="sq"><canvas class="gc" aria-label="Network as an adjacency matrix"></canvas><figcaption><b>(d) Adjacency matrix.</b> Rows and columns are customers; a filled square is a link. Dense blocks on the diagonal are tightly knit groups.</figcaption></figure>
+<figure class="sq"><canvas class="gc" aria-label="Network as a chord ring"></canvas><figcaption><b>(e) Chord ring.</b> Customers around a ring, grouped by hub. Coloured links stay inside a group; grey links cross between groups.</figcaption></figure>
+<figure class="sq"><canvas class="gc" aria-label="Network as packed bubbles"></canvas><figcaption><b>(f) Bubble clusters.</b> One bubble per customer, sized by PageRank and packed inside its group. Select one to see its links.</figcaption></figure>
+</div>
+<div id="legend" class="note" style="display:flex;gap:18px;flex-wrap:wrap;margin:12px 0 0"></div>
+<p><button id="sp" class="btn" style="background:var(--neo)">Find shortest path</button> <span class="note">from the selected node (or a random one) to a random customer</span></p>
+<p class="note" id="ginfo">The same 60-customer network in six views. Click a node in any panel to highlight it and its neighbours in all of them.</p>
+</section>
+
+<section id="arch">
+<h2>Choosing a database per workload</h2>
+<p class="lead">The question isn't which database is best. It's which one matches the data's shape, how it is read, and how strict consistency has to be.</p>
+<div class="grid">
+<div class="card"><h3>Workload fit</h3><p>Score 1–5 from the project's access-pattern analysis.</p><div class="chart"><canvas id="cFit"></canvas></div></div>
+<div class="card wrap"><h3>Decision matrix</h3><p>What went where, and why.</p>
+<table><tr><th>Data</th><th>Store</th><th>Reason</th></tr>
+<tr><td>Orders, payments, inventory</td><td style="color:var(--sql)">MySQL</td><td>ACID, joins, constraints</td></tr>
+<tr><td>Product catalogue, reviews</td><td style="color:var(--mongo)">MongoDB</td><td>Variable attributes, nested data</td></tr>
+<tr><td>Follows, co-purchases</td><td style="color:var(--neo)">Neo4j</td><td>Multi-hop traversal</td></tr>
+<tr><td>Dashboards</td><td style="color:var(--sql)">MySQL</td><td>Window functions, views</td></tr></table></div>
+</div>
+<div class="card" style="margin-top:20px"><h3>Integration flow</h3><p>MySQL is the system of record; the other two are fed from it.</p>
+<svg viewBox="0 0 760 150" width="100%" role="img" aria-label="Architecture diagram"><g font-family="Bricolage Grotesque,sans-serif" font-size="15" text-anchor="middle" fill="currentColor">
+<rect x="10" y="50" width="130" height="50" rx="8" fill="none" stroke="currentColor"/><text x="75" y="80">Client / API</text>
+<rect x="210" y="50" width="130" height="50" rx="8" fill="none" stroke="currentColor"/><text x="275" y="80">Integration layer</text>
+<rect x="440" y="5" width="140" height="42" rx="8" fill="var(--sql)" opacity=".18" stroke="var(--sql)"/><text x="510" y="31">MySQL</text>
+<rect x="440" y="54" width="140" height="42" rx="8" fill="var(--mongo)" opacity=".18" stroke="var(--mongo)"/><text x="510" y="80">MongoDB</text>
+<rect x="440" y="103" width="140" height="42" rx="8" fill="var(--neo)" opacity=".18" stroke="var(--neo)"/><text x="510" y="129">Neo4j</text>
+<rect x="640" y="50" width="110" height="50" rx="8" fill="none" stroke="currentColor"/><text x="695" y="80">Benchmarks</text>
+<g stroke="currentColor" fill="none"><path d="M140 75H210M340 75L440 26M340 75H440M340 75L440 124M580 26L640 70M580 75H640M580 124L640 80"/></g></g></svg></div>
+<div class="card" style="margin-top:20px"><h3>Where the data goes</h3><p>Rows in MySQL become documents in MongoDB and nodes and relationships in Neo4j. Band width scales with the square root of the count.</p><div class="wrap"><svg id="sk" viewBox="0 0 760 270" width="100%" role="img" aria-label="Data flow from MySQL tables to MongoDB and Neo4j"></svg></div></div>
+</section>
+
+<section id="method">
+<h2>Methodology</h2>
+<p class="lead">How the project went from a blank page to comparable numbers: choose each database for a reason, load the same data into all three, and measure under rules that keep the comparison fair.</p>
+<div class="steps">
+<div class="step"><b>1</b><h3>Model the domain</h3><p>List entities, relationships and the questions the system must answer.</p></div>
+<div class="step" style="border-color:var(--mongo)"><b style="color:var(--mongo)">2</b><h3>Pick a paradigm</h3><p>Match each part of the data to a store by shape, access pattern and consistency need.</p></div>
+<div class="step" style="border-color:var(--neo)"><b style="color:var(--neo)">3</b><h3>Load one dataset</h3><p>Generate it once from a fixed seed, then load the same logical data into every store.</p></div>
+<div class="step"><b>4</b><h3>Define workloads</h3><p>Write the same questions as SQL, aggregation pipelines and Cypher.</p></div>
+<div class="step" style="border-color:var(--mongo)"><b style="color:var(--mongo)">5</b><h3>Measure</h3><p>Warm up, repeat, record median and tail latency, throughput and size.</p></div>
+<div class="step" style="border-color:var(--neo)"><b style="color:var(--neo)">6</b><h3>Verify and analyse</h3><p>Confirm each query plan, check variance, then compare.</p></div>
+</div>
+<div class="grid">
+<div class="card wrap"><h3>How a paradigm was chosen</h3><p>Four questions asked of each dataset.</p><table><tr><th>Question</th><th>If yes, lean toward</th></tr>
+<tr><td>Are rows tightly related and must stay consistent?</td><td style="color:var(--sql)">MySQL</td></tr>
+<tr><td>Does each record vary in shape and get read whole?</td><td style="color:var(--mongo)">MongoDB</td></tr>
+<tr><td>Is the question about paths or neighbours?</td><td style="color:var(--neo)">Neo4j</td></tr>
+<tr><td>Is it heavy ad-hoc aggregation?</td><td style="color:var(--sql)">MySQL</td></tr></table></div>
+<div class="card"><h3>The dataset</h3><p>One logical dataset, three physical forms.</p><ul class="t">
+<li><b>Generated from a fixed seed</b>, so every run sees identical data.</li>
+<li><b>Skewed on purpose:</b> a few popular products and heavy buyers, like real shops.</li>
+<li><b>Several sizes</b> from 1M to 100M rows to test scalability.</li>
+<li><b>Same facts everywhere:</b> orders as tables, products as documents, follows and purchases as edges.</li></ul></div>
+<div class="card"><h3>Benchmark protocol</h3><p>Rules applied to every measurement.</p><ul class="t">
+<li>Discard the first runs (warm-up), then repeat each query many times.</li>
+<li>Report median, p95 and p99, never the average alone.</li>
+<li>Measure cold-cache and warm-cache separately.</li>
+<li>Change one variable at a time: index, size or isolation level.</li>
+<li>Declare indexes before timing and confirm the plan with <code>EXPLAIN</code>, <code>.explain()</code> or <code>PROFILE</code>.</li>
+<li>Use the same machine, same client and same dataset for all three.</li></ul></div>
+<div class="card"><h3>Why warm-up runs are discarded</h3><p>Illustrative: the first runs pay for cold caches. The pink points are excluded.</p><div class="chart"><canvas id="cWarm"></canvas></div></div>
+</div>
+<div class="grid">
+<div class="card wrap"><h3>What was measured, and how</h3><p>One row per metric.</p><table><tr><th>Metric</th><th>Method</th></tr>
+<tr><td>Query latency</td><td>Client-side timer, cross-checked with <code>EXPLAIN ANALYZE</code></td></tr>
+<tr><td>Throughput</td><td>Operations per second with N concurrent clients</td></tr>
+<tr><td>Index performance</td><td>Same query before and after; rows examined</td></tr>
+<tr><td>Storage overhead</td><td>On-disk size of identical data in each store</td></tr>
+<tr><td>Transaction behaviour</td><td>Isolation-level runs; commits, aborts, deadlocks</td></tr>
+<tr><td>Traversal efficiency</td><td>Time versus hop depth, joins versus Cypher</td></tr>
+<tr><td>Scalability</td><td>Repeat at growing dataset sizes</td></tr></table></div>
+<div class="card"><h3>Test environment</h3><p>Fill these in with your own setup before publishing.</p><table>
+<tr><td>CPU / cores</td><td>[fill in]</td></tr><tr><td>Memory</td><td>[fill in]</td></tr><tr><td>Storage</td><td>[fill in]</td></tr>
+<tr><td>MySQL version</td><td>[fill in]</td></tr><tr><td>MongoDB version</td><td>[fill in]</td></tr><tr><td>Neo4j version</td><td>[fill in]</td></tr>
+<tr><td>Repetitions per query</td><td>[fill in]</td></tr></table></div>
+<div class="card"><h3>Limits of the comparison</h3><p>What the numbers can and cannot say.</p><ul class="t">
+<li>Synthetic data and a single node: results show relative strengths, not absolute speeds.</li>
+<li>Engines differ in caching, drivers and durability defaults, so each was tuned to comparable settings.</li>
+<li>Each store was used for what it is built for; a workload one of them is poor at is a finding, not a bug.</li>
+<li>Results should be re-run on new hardware before being relied on.</li></ul></div>
+<div class="card"><h3>Run order</h3><p>Outline of how a full run goes. Adapt names to your scripts.</p><pre><span class="c"># 1. start the three databases</span>
+docker compose up -d
+<span class="c"># 2. generate data from a fixed seed</span>
+python seed.py --seed 42 --scale 1M
+<span class="c"># 3. load the same data into each store</span>
+python load.py --all
+<span class="c"># 4. benchmark with warm-up and repeats</span>
+python bench.py --warmup 5 --runs 30
+<span class="c"># 5. produce medians, percentiles, charts</span>
+python report.py</pre></div>
+</div>
+</section>
+
+<section id="mysql">
+<h2><span class="dot" style="background:var(--sql)"></span>MySQL: relational layer</h2>
+<p class="lead">ER model → functional dependencies → 3NF/BCNF, then analytics with CTEs, recursive CTEs and window functions.</p>
+<div class="grid">
+<div class="card"><h3>Schema (BCNF)</h3><p>Keys and relationships.</p>
+<svg viewBox="0 0 420 270" width="100%" role="img" aria-label="ER diagram" font-family="IBM Plex Mono,monospace" font-size="11" fill="currentColor">
+<g stroke="currentColor" fill="none"><rect x="5" y="10" width="120" height="70" rx="4"/><rect x="150" y="10" width="120" height="70" rx="4"/><rect x="295" y="10" width="120" height="70" rx="4"/><rect x="150" y="120" width="120" height="70" rx="4"/><rect x="295" y="120" width="120" height="70" rx="4"/><rect x="295" y="210" width="120" height="55" rx="4"/>
+<path d="M125 45H150M270 45H295M210 80V120M270 155H295M355 80V120M355 190V210"/></g>
+<g stroke="none"><text x="12" y="27" font-weight="600">customers</text><text x="12" y="45">PK id</text><text x="12" y="60">name, email</text><text x="12" y="74">city</text>
+<text x="157" y="27" font-weight="600">orders</text><text x="157" y="45">PK id</text><text x="157" y="60">FK customer_id</text><text x="157" y="74">placed_at, status</text>
+<text x="302" y="27" font-weight="600">order_items</text><text x="302" y="45">PK (order,prod)</text><text x="302" y="60">qty, unit_price</text>
+<text x="157" y="137" font-weight="600">payments</text><text x="157" y="155">PK id, FK order</text><text x="157" y="170">amount, method</text>
+<text x="302" y="137" font-weight="600">products</text><text x="302" y="155">PK id, sku</text><text x="302" y="170">FK category_id</text><text x="302" y="184">price</text>
+<text x="302" y="227" font-weight="600">categories</text><text x="302" y="245">PK id</text><text x="302" y="259">FK parent_id (self)</text></g></svg></div>
+<div class="card"><h3>Revenue by category</h3><p>Output of the window-function report (sample data, £k).</p><div class="chart"><canvas id="cRev"></canvas></div></div>
+</div>
+<div class="card" style="margin-top:20px"><h3>Query gallery</h3>
+<div class="tabs" role="tablist" id="tabs"></div><pre id="code"></pre></div>
+<div class="grid">
+<div class="card"><h3>Index strategy: latency</h3><p>Same query, before and after indexing (ms, log scale).</p><div class="chart"><canvas id="cIdx"></canvas></div></div>
+<div class="card"><h3>Rows examined (EXPLAIN ANALYZE)</h3><p>Query rewrite + composite/covering index.</p><div class="chart"><canvas id="cRows"></canvas></div></div>
+</div>
+</section>
+
+<section id="opt">
+<h2><span class="dot" style="background:var(--sql)"></span>Query optimization, step by step</h2>
+<p class="lead">Normalise first, then let the optimizer work: B+-tree indexes, accurate cardinality estimates, a good join order, and materialized views for repeated reports.</p>
+<div class="grid">
+<div class="card"><h3>Normalization walkthrough</h3><p>One wide table, split by its functional dependencies.</p><pre><span class="c">-- Before: orders_wide (1NF)</span>
+(order_id, cust_id, cust_city, prod_id, prod_name, qty)
+<span class="c">-- FDs</span>
+order_id → cust_id
+cust_id  → cust_city        <span class="c">-- transitive: breaks 3NF</span>
+prod_id  → prod_name        <span class="c">-- partial: breaks 2NF</span>
+(order_id, prod_id) → qty
+<span class="c">-- After: BCNF, every determinant is a key</span>
+customers(<span class="k">cust_id</span>, cust_city)
+products(<span class="k">prod_id</span>, prod_name)
+orders(<span class="k">order_id</span>, cust_id)
+order_items(<span class="k">order_id, prod_id</span>, qty)</pre></div>
+<div class="card"><h3>B+-tree lookup</h3><p>Searching for 41: root → middle leaf. Leaves are linked, so range scans walk sideways.</p>
+<svg viewBox="0 0 600 170" width="100%" role="img" aria-label="B+ tree" font-family="IBM Plex Mono,monospace" font-size="13" fill="currentColor" text-anchor="middle">
+<g fill="none" stroke="currentColor"><rect x="240" y="10" width="120" height="30" rx="4"/><rect x="30" y="110" width="140" height="30" rx="4"/><rect x="230" y="110" width="140" height="30" rx="4" stroke="var(--sql)" stroke-width="3"/><rect x="430" y="110" width="140" height="30" rx="4"/>
+<path d="M270 40L100 110M300 40V110M330 40L500 110" /><path d="M170 125H230M370 125H430" stroke-dasharray="4 3"/></g>
+<g stroke="none"><text x="300" y="30">30 | 60</text><text x="100" y="130">5 12 21</text><text x="300" y="130" font-weight="600">30 41 52</text><text x="500" y="130">60 75 90</text><text x="300" y="165" fill="var(--mut)">3 page reads for 100M rows at fan-out ~500</text></g></svg></div>
+<div class="card"><h3>EXPLAIN ANALYZE plan</h3><p>Cheapest plan found for "orders of customer 42".</p>
+<svg viewBox="0 0 420 200" width="100%" role="img" aria-label="Query plan tree" font-size="13" fill="currentColor" text-anchor="middle" font-family="Bricolage Grotesque,sans-serif">
+<g fill="none" stroke="currentColor"><rect x="110" y="8" width="200" height="40" rx="6"/><rect x="5" y="120" width="195" height="52" rx="6"/><rect x="220" y="120" width="195" height="52" rx="6"/><path d="M210 48V76M210 76H102V120M210 76H318V120"/><rect x="110" y="76" width="0" height="0"/></g>
+<g stroke="none"><text x="210" y="26">Nested-loop join</text><text x="210" y="42" fill="var(--mut)" font-size="11">cost 214 · 18 rows</text>
+<text x="102" y="142">Index range scan: orders</text><text x="102" y="160" fill="var(--mut)" font-size="11">idx_cust_date · est 20 / actual 18</text>
+<text x="318" y="142">Single-row lookup: customers</text><text x="318" y="160" fill="var(--mut)" font-size="11">PRIMARY · est 1 / actual 1</text></g></svg></div>
+<div class="card"><h3>Cardinality: estimated vs actual</h3><p>Fresh histograms keep the optimizer honest (rows per plan node).</p><div class="chart"><canvas id="cCard"></canvas></div></div>
+<div class="card"><h3>Materialized view vs live query</h3><p>Dashboard query time (ms). MySQL has no native MV, so a summary table is refreshed by an event.</p><div class="chart"><canvas id="cMV"></canvas></div></div>
+<div class="card"><h3>Optimizations applied</h3><p>Rewrites that changed the plan.</p><pre><span class="c">-- predicate pushdown: filter before the join</span>
+<span class="k">SELECT</span> ... <span class="k">FROM</span> (<span class="k">SELECT</span> * <span class="k">FROM</span> orders
+  <span class="k">WHERE</span> placed_at &gt;= <span class="s">'2024-01-01'</span>) o <span class="k">JOIN</span> ...
+<span class="c">-- subquery → join; IN → EXISTS</span>
+<span class="c">-- covering index: no table lookups</span>
+<span class="k">CREATE INDEX</span> idx_cov <span class="k">ON</span> orders
+  (customer_id, placed_at, status);</pre></div>
+</div>
+<div class="grid"><div class="card"><h3>Join algorithms by table size</h3><p>Time to join two equal-size tables (ms, log scale).</p><div class="chart"><canvas id="cJoin"></canvas></div></div><div class="card"><h3>Storage by normal form</h3><p>Same data, fewer duplicated values (MB).</p><div class="chart"><canvas id="cNF"></canvas></div></div></div>
+</section>
+
+<section id="lab">
+<h2>Live SQL lab: run it yourself</h2>
+<p class="lead">This builds a 200,000-order database in your browser and runs real queries on it. Timings below are measured on your machine, not sample data.</p>
+<div class="card"><button id="load" class="btn">Build dataset</button> <span id="lstat" class="note">Loads a SQL engine (SQLite compiled to WebAssembly, so syntax follows SQLite, not MySQL).</span>
+<div id="labui" hidden style="margin-top:16px">
+<div class="tabs" id="presets"></div>
+<textarea id="sqlin" rows="7" spellcheck="false" aria-label="SQL query" style="width:100%;font:13px 'IBM Plex Mono',monospace;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--code);color:var(--codeink)"></textarea>
+<p><button id="run" class="btn">Run query</button> <span id="rtime" class="note"></span></p>
+<div class="wrap"><table id="rres"></table></div>
+<h3 style="margin-top:16px">Query plan</h3><pre id="rplan"></pre></div></div>
+<div class="grid" id="benchbox" hidden>
+<div class="card"><h3>Measured: indexing impact</h3><p>Average time for 300 customer lookups on 200k rows, measured live (ms per query).</p><button id="bm" class="btn">Run benchmark</button><div class="chart"><canvas id="cLive"></canvas></div><p class="note" id="bmnote"></p></div>
+<div class="card"><h3>Try these</h3><p>Things worth experimenting with.</p><pre><span class="c">-- 1. Run the plan with and without an index:</span>
+<span class="k">CREATE INDEX</span> i1 <span class="k">ON</span> orders(customer_id);
+<span class="c">-- 2. Compare SCAN vs SEARCH in the plan.</span>
+<span class="c">-- 3. Rewrite the window query as a self-join</span>
+<span class="c">--    and compare the time.</span></pre></div></div>
+</section>
+
+<section id="mongo">
+<h2><span class="dot" style="background:var(--mongo)"></span>MongoDB: documents</h2>
+<p class="lead">Embed what is read together, reference what grows without bound, and validate with a JSON schema.</p>
+<div class="grid">
+<div class="card"><h3>Product document</h3><p>Embedded specs and top reviews.</p><pre>{ <span class="s">"_id"</span>: <span class="s">"p_1042"</span>,
+  <span class="s">"name"</span>: <span class="s">"Trail Runner X"</span>,
+  <span class="s">"category"</span>: [<span class="s">"Shoes"</span>,<span class="s">"Running"</span>],
+  <span class="s">"specs"</span>: { <span class="s">"weight_g"</span>: 280, <span class="s">"drop_mm"</span>: 6 },
+  <span class="s">"reviews"</span>: [ { <span class="s">"user"</span>: 88, <span class="s">"stars"</span>: 5 } ],
+  <span class="s">"price"</span>: 89.0 }</pre></div>
+<div class="card"><h3>Aggregation pipeline</h3><p>Top-rated products with 50+ reviews.</p><pre>db.products.aggregate([
+  { <span class="k">$unwind</span>: <span class="s">"$reviews"</span> },
+  { <span class="k">$group</span>: { _id: <span class="s">"$_id"</span>,
+      avg: { <span class="k">$avg</span>: <span class="s">"$reviews.stars"</span> },
+      n:   { <span class="k">$sum</span>: 1 } } },
+  { <span class="k">$match</span>: { n: { <span class="k">$gte</span>: 50 } } },
+  { <span class="k">$sort</span>: { avg: -1 } },
+  { <span class="k">$limit</span>: 10 } ])</pre></div>
+<div class="card"><h3>Documents surviving each stage</h3><p>Sample run over 120k products.</p><div class="chart"><canvas id="cPipe"></canvas></div></div>
+<div class="card"><h3>Index impact on query time</h3><p>Collection scan vs index (ms).</p><div class="chart"><canvas id="cMIdx"></canvas></div></div>
+</div>
+<div class="grid">
+<div class="card"><h3>Schema validation</h3><p>Flexible, but not lawless.</p><pre>db.createCollection(<span class="s">"products"</span>, {
+ validator: { <span class="k">$jsonSchema</span>: {
+  bsonType: <span class="s">"object"</span>,
+  required: [<span class="s">"name"</span>,<span class="s">"price"</span>],
+  properties: {
+   price: { bsonType: <span class="s">"double"</span>, minimum: 0 },
+   reviews: { bsonType: <span class="s">"array"</span>, maxItems: 100 } } } } })</pre></div>
+<div class="card wrap"><h3>Embed or reference?</h3><p>The rule used for each relationship.</p><table><tr><th>Relationship</th><th>Choice</th><th>Why</th></tr><tr><td>Product → specs</td><td class="y">Embed</td><td>Read together, 1:1</td></tr><tr><td>Product → top reviews</td><td class="y">Embed</td><td>Bounded (≤100)</td></tr><tr><td>Product → all orders</td><td class="n">Reference</td><td>Unbounded growth</td></tr></table></div>
+<div class="card"><h3>Compound and text indexes</h3><p>ESR rule: Equality, Sort, Range.</p><pre>db.products.createIndex({ category: 1, price: -1, rating: 1 })
+db.products.createIndex({ name: <span class="s">"text"</span>, description: <span class="s">"text"</span> })
+db.products.find({ <span class="k">$text</span>: { <span class="k">$search</span>: <span class="s">"waterproof"</span> } })
+  .projection({ name: 1, price: 1 })</pre></div>
+</div>
+<div class="grid" style="margin-bottom:20px"><div class="card"><h3>Embedded vs referenced reads</h3><p>Read latency as the parent document grows (ms).</p><div class="chart"><canvas id="cDoc"></canvas></div></div><div class="card"><h3>Storage by collection</h3><p>Share of the 7.6 GB MongoDB footprint.</p><div class="chart"><canvas id="cColl"></canvas></div></div></div>
+<div class="card" style="margin-top:20px"><h3>Run it: aggregation playground</h3><p>20,000 generated product documents and a small in-browser aggregation engine. It supports $match, $unwind, $group, $project, $sort and $limit.</p>
+<div class="tabs" id="mpre"></div>
+<textarea id="mpin" rows="8" spellcheck="false" aria-label="Aggregation pipeline (JSON)" style="width:100%;font:13px 'IBM Plex Mono',monospace;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--code);color:var(--codeink)"></textarea>
+<p><button id="mrun" class="btn" style="background:var(--mongo)">Run pipeline</button> <span id="mtime" class="note"></span></p><pre id="mout" style="max-height:260px"></pre></div>
+</section>
+
+<section id="neo">
+<h2><span class="dot" style="background:var(--neo)"></span>Neo4j: relationships first</h2>
+<p class="lead">Friends-of-friends and "customers who bought this also bought" are path queries. Graphs answer them without join explosions.</p>
+<div class="grid">
+<div class="card"><h3>Cypher</h3><p>Recommendations within 3 hops.</p><pre><span class="k">MATCH</span> (me:Customer {id:$id})-[:FOLLOWS*1..3]-&gt;(f)
+      -[:BOUGHT]-&gt;(p:Product)
+<span class="k">WHERE NOT</span> (me)-[:BOUGHT]-&gt;(p)
+<span class="k">RETURN</span> p.name, count(*) <span class="k">AS</span> score
+<span class="k">ORDER BY</span> score <span class="k">DESC LIMIT</span> 10</pre></div>
+<div class="card"><h3>Top customers by PageRank</h3><p>Computed live from the hero graph.</p><div class="chart"><canvas id="cPR"></canvas></div></div>
+<div class="card"><h3>Degree distribution</h3><p>A few hubs, many leaves.</p><div class="chart"><canvas id="cDeg"></canvas></div></div>
+<div class="card"><h3>Traversal depth: SQL joins vs Cypher</h3><p>Time to find friends N hops away (ms, log scale).</p><div class="chart"><canvas id="cHop"></canvas></div></div>
+</div>
+</div>
+<div class="grid">
+<div class="card"><h3>Shortest path and centrality</h3><p>Pattern matching and graph algorithms.</p><pre><span class="k">MATCH</span> p = <span class="k">shortestPath</span>(
+  (a:Customer {id:1})-[:FOLLOWS*..6]-(b:Customer {id:42}))
+<span class="k">RETURN</span> length(p), [n IN nodes(p) | n.id];
+
+<span class="k">MATCH</span> (c:Customer)&lt;-[:FOLLOWS]-(f)
+<span class="k">RETURN</span> c.id, count(f) <span class="k">AS</span> inDegree
+<span class="k">ORDER BY</span> inDegree <span class="k">DESC LIMIT</span> 10</pre></div>
+<div class="card"><h3>Graph model</h3><p>Nodes, relationships, properties.</p>
+<svg viewBox="0 0 420 130" width="100%" role="img" aria-label="Graph model" font-size="12" font-family="IBM Plex Mono,monospace" text-anchor="middle" fill="currentColor">
+<g fill="none" stroke-width="2"><circle cx="60" cy="65" r="38" stroke="var(--neo)"/><circle cx="210" cy="65" r="38" stroke="var(--neo)"/><circle cx="360" cy="65" r="38" stroke="var(--mongo)"/></g>
+<g stroke="currentColor"><path d="M98 65H172M248 65H322"/><path d="M60 27C60 -5 90 -5 90 30" fill="none"/></g>
+<g stroke="none"><text x="60" y="69">Customer</text><text x="210" y="69">Customer</text><text x="360" y="69">Product</text><text x="135" y="58">FOLLOWS</text><text x="285" y="58">BOUGHT</text><text x="60" y="122" fill="var(--mut)">{id,name,city}</text><text x="360" y="122" fill="var(--mut)">{sku,price}</text></g></svg></div>
+</div>
+<div class="grid"><div class="card"><h3>Degree vs PageRank</h3><p>Each dot is a customer, computed live. Rank rewards who you are connected to, not just how many.</p><div class="chart"><canvas id="cSC"></canvas></div></div><div class="card"><h3>Customers per hub neighbourhood</h3><p>Each customer is grouped with its nearest top-5 hub.</p><div class="chart"><canvas id="cComm"></canvas></div></div><div class="card"><h3>Degree distribution, log–log</h3><p>A heavy tail is the signature of hub-dominated networks. Computed live.</p><div class="chart"><canvas id="cCC"></canvas></div></div></div>
+</section>
+
+<section id="tx">
+<h2>Transactions and concurrency</h2>
+<p class="lead">ACID workflows in MySQL, plus experiments with isolation, locking and deadlocks.</p>
+<div class="grid">
+<div class="card wrap"><h3>Isolation levels and anomalies</h3><p>What each level permits in InnoDB.</p><table>
+<tr><th>Level</th><th>Dirty</th><th>Non-rep.</th><th>Phantom</th></tr>
+<tr><td>READ UNCOMMITTED</td><td class="n">possible</td><td class="n">possible</td><td class="n">possible</td></tr>
+<tr><td>READ COMMITTED</td><td class="y">no</td><td class="n">possible</td><td class="n">possible</td></tr>
+<tr><td>REPEATABLE READ</td><td class="y">no</td><td class="y">no</td><td class="y">no*</td></tr>
+<tr><td>SERIALIZABLE</td><td class="y">no</td><td class="y">no</td><td class="y">no</td></tr></table>
+<p class="note">*InnoDB's gap locks and MVCC snapshot prevent most phantoms at this level.</p></div>
+<div class="card"><h3>Throughput by isolation level</h3><p>Transactions per second, 32 clients (sample).</p><div class="chart"><canvas id="cTx"></canvas></div></div>
+</div>
+<div class="card" style="margin-top:20px"><h3>Deadlock: two transactions, opposite lock order</h3><p>InnoDB detects the cycle and rolls back the cheaper transaction.</p>
+<svg viewBox="0 0 700 150" width="100%" role="img" aria-label="Deadlock timeline" font-family="IBM Plex Mono,monospace" font-size="12" fill="currentColor">
+<text x="5" y="40">T1</text><text x="5" y="110">T2</text>
+<g stroke="none"><rect x="40" y="22" width="150" height="26" rx="4" fill="var(--sql)" opacity=".25"/><text x="48" y="40">lock acct A</text>
+<rect x="330" y="22" width="150" height="26" rx="4" fill="var(--neo)" opacity=".25"/><text x="338" y="40">wait acct B…</text>
+<rect x="190" y="92" width="150" height="26" rx="4" fill="var(--sql)" opacity=".25"/><text x="198" y="110">lock acct B</text>
+<rect x="340" y="92" width="150" height="26" rx="4" fill="var(--neo)" opacity=".25"/><text x="348" y="110">wait acct A…</text>
+<rect x="520" y="57" width="170" height="36" rx="4" fill="var(--neo)"/><text x="532" y="79" fill="#fff">ERROR 1213: rollback T2</text></g></svg></div>
+</section>
+
+<section id="tx2" style="padding-top:20px">
+<div class="grid">
+<div class="card"><h3>Two-phase locking</h3><p>Grow, then shrink. Never lock after the first unlock; that guarantees conflict-serializable schedules.</p><pre>T1: lock-X(A) read(A) write(A) lock-X(B)
+    read(B) write(B) <span class="k">COMMIT</span>  unlock(A,B)
+        <span class="c">└ growing phase ┘     └ shrinking ┘</span>
+<span class="c">-- strict 2PL holds X-locks until commit</span>
+<span class="c">-- avoids cascading rollbacks</span></pre></div>
+<div class="card"><h3>MVCC read view</h3><p>Readers see a snapshot and never block writers.</p><pre><span class="c">-- Session 1 (REPEATABLE READ)</span>
+<span class="k">START TRANSACTION</span>; <span class="k">SELECT</span> bal <span class="k">FROM</span> acct <span class="k">WHERE</span> id=1; <span class="c">-- 500</span>
+<span class="c">-- Session 2 commits UPDATE bal=400</span>
+<span class="k">SELECT</span> bal <span class="k">FROM</span> acct <span class="k">WHERE</span> id=1; <span class="c">-- still 500</span>
+<span class="k">COMMIT</span>;                       <span class="c">-- next read: 400</span></pre></div>
+<div class="card"><h3>Deadlocks per 1,000 transactions</h3><p>Rises with contention (sample).</p><div class="chart"><canvas id="cDead"></canvas></div></div>
+</div>
+<div class="grid"><div class="card"><h3>Throughput vs concurrency</h3><p>Transactions per second as clients increase (sample).</p><div class="chart"><canvas id="cTP"></canvas></div></div><div class="card"><h3>Abort rate heatmap</h3><p>Percent of transactions rolled back, by isolation level and clients (sample).</p><div id="heat" class="wrap"></div></div></div>
+</section>
+
+<section id="sec">
+<h2>Security</h2>
+<p class="lead">Least privilege through roles, and queries that never concatenate user input.</p>
+<div class="grid">
+<div class="card wrap"><h3>Role-based access</h3><p>Privileges per role.</p><table>
+<tr><th></th><th>SELECT</th><th>INSERT</th><th>UPDATE</th><th>DELETE</th><th>DDL</th></tr>
+<tr><td>analyst</td><td class="y">✓</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td></tr>
+<tr><td>app_user</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="n">–</td><td class="n">–</td></tr>
+<tr><td>admin</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr></table>
+<pre style="margin-top:12px"><span class="k">CREATE ROLE</span> analyst;
+<span class="k">GRANT SELECT ON</span> shop.* <span class="k">TO</span> analyst;</pre></div>
+<div class="card"><h3>Injection: try it</h3><p>Type a name. The unsafe query is built by string concatenation; the safe one is parameterised.</p>
+<input id="inj" value="x' OR '1'='1" style="width:100%;font:13px 'IBM Plex Mono',monospace;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)" aria-label="Name input">
+<p class="note" style="margin-bottom:4px">Unsafe</p><pre id="unsafe"></pre><p class="note" style="margin-bottom:4px">Safe (parameterised)</p><pre id="safe"></pre><p class="note" id="verdict"></p></div>
+</div>
+<div class="grid"><div class="card"><h3>Injection attacks that succeed</h3><p>Concatenated SQL vs parameterised queries (% of test payloads).</p><div class="chart"><canvas id="cSecD"></canvas></div></div></div>
+</section>
+
+<section id="bench">
+<h2>Cross-database benchmarks</h2>
+<p class="lead">Same dataset, same questions, three engines. The point is where each one wins, not which one wins overall.</p>
+<div class="grid">
+<div class="card"><h3>Query latency by workload</h3><p>Median ms, log scale. Lower is better.</p><div class="chart" style="height:320px"><canvas id="cLat"></canvas></div></div>
+<div class="card"><h3>Overall profile</h3><p>Normalised 0–100. Higher is better.</p><div class="chart" style="height:320px"><canvas id="cRad"></canvas></div></div>
+<div class="card"><h3>Scalability</h3><p>Point-lookup throughput as data grows (ops/s ×1000).</p><div class="chart"><canvas id="cScale"></canvas></div></div>
+<div class="card"><h3>Storage overhead</h3><p>On-disk size for the same data (GB).</p><div class="chart"><canvas id="cStore"></canvas></div></div>
+</div>
+<div class="grid"><div class="card"><h3>Latency percentiles</h3><p>Tail latency tells a different story than the median (ms).</p><div class="chart"><canvas id="cPct"></canvas></div></div><div class="card"><h3>Where the time goes</h3><p>Per-query breakdown (ms).</p><div class="chart"><canvas id="cBrk"></canvas></div></div></div>
+<div class="grid"><div class="card"><h3>Slowdown vs the best engine</h3><p>How many times slower each database is than the fastest one for the same workload.</p><div id="hm" class="wrap"></div></div><div class="card"><h3>Latency distribution</h3><p>Share of queries finished within a given time (empirical CDF, 400 queries each).</p><div class="chart"><canvas id="cECDF"></canvas></div></div><div class="card"><h3>When an index stops helping</h3><p>Time to fetch a growing share of a 1M-row table. Cost model: random index reads cost about 10x a sequential row.</p><div class="chart"><canvas id="cSel"></canvas></div></div></div>
+<div class="card" style="margin-top:20px"><h3>Scale explorer</h3><p>Drag to change the row count. Latency from textbook cost models: B-tree O(log n), full scan O(n), traversal independent of total size.</p>
+<label for="sl">Rows: <b id="slv"></b></label><input id="sl" type="range" min="3" max="9" step=".1" value="6" style="width:100%"><div class="chart"><canvas id="cSim"></canvas></div></div>
+<p class="note">Each figure is tagged by provenance: green tags are computed or measured in your browser; amber tags are sample data. Replace the amber figures' numbers in the <code>DATA</code> object in the script at the bottom of this file with your measured results.</p>
+</section>
+
+<section id="ml">
+<h2>ML predictions, live</h2>
+<p class="lead">Three predictors trained across all three stores — high-value customers, next order amounts, review ratings — plus calibration, SHAP explanations and data-quality plots. It runs below, embedded from Streamlit.</p>
+<div class="card"><h3>Try the models</h3><p>Customer value, order amount and rating predictors in one app.</p>
+<iframe id="mlframe" title="DataSphere ML predictor (Streamlit)" style="width:100%;height:760px;border:1px solid var(--line);border-radius:10px;background:#fff" loading="lazy"></iframe>
+<p class="note" id="mlnote"></p></div>
+</section>
+
+<section>
+<h2>What the project showed</h2>
+<div class="grid">
+<div class="card"><h3 style="color:var(--sql)">Choose MySQL when</h3><p>Correctness matters most: money, inventory, multi-row invariants, ad-hoc analytics over normalised data.</p></div>
+<div class="card"><h3 style="color:var(--mongo)">Choose MongoDB when</h3><p>Records vary in shape and are read whole: catalogues, content, events. Scale-out comes built in.</p></div>
+<div class="card"><h3 style="color:var(--neo)">Choose Neo4j when</h3><p>The question is about relationships: paths, recommendations, influence. Cost follows hops, not table size.</p></div>
+</div>
+<p style="margin-top:20px">The common thread: index for the access pattern you actually have, measure with <code>EXPLAIN</code> or <code>.explain()</code>, and keep one system of record.</p>
+</section>
+
+<footer>DataSphere · DBMS &amp; SQL course project</footer>
+
+<script>
+/* ===== Replace these numbers with your measured results ===== */
+const DATA={
+ fit:{labels:['Joins & integrity','Flexible schema','Traversal','Aggregation','Horizontal scale'],sql:[5,2,2,5,2],mongo:[2,5,2,4,5],neo:[2,3,5,2,3]},
+ rev:{labels:['Shoes','Electronics','Home','Books','Beauty','Sports'],v:[412,689,355,198,243,301]},
+ idx:{labels:['Point lookup','Range scan','3-table join','Top-N by group'],before:[420,1900,5200,3100],after:[0.4,38,160,95]},
+ rows:{labels:['Original','Rewritten','+ composite','+ covering'],v:[2400000,610000,18400,3100]},
+ pipe:{labels:['collection','$unwind','$group','$match','$limit'],v:[120000,486000,120000,9300,10]},
+ midx:{labels:['Equality','Range','Text search','Compound sort'],scan:[310,420,980,560],idx:[0.8,14,22,6]},
+ hop:{labels:['1 hop','2 hops','3 hops','4 hops','5 hops'],sql:[2,18,240,3800,52000],neo:[1,2,5,22,140]},
+ tx:{labels:['READ UNCOMMITTED','READ COMMITTED','REPEATABLE READ','SERIALIZABLE'],v:[9800,9400,8700,4100]},
+ lat:{labels:['Point lookup','Range scan','Join (3)','Aggregate','6-hop traversal','Doc by nested field'],sql:[0.4,38,160,95,52000,210],mongo:[0.5,25,900,70,24000,3],neo:[1.2,60,300,180,140,95]},
+ rad:{labels:['Latency','Throughput','Joins','Traversal','Flexibility','Consistency'],sql:[80,85,95,20,30,100],mongo:[85,90,30,25,100,60],neo:[60,55,50,100,60,75]},
+ scale:{labels:['1M','5M','10M','50M','100M'],sql:[52,44,38,24,15],mongo:[48,45,43,39,35],neo:[30,27,24,17,11]},
+ store:{labels:['MySQL','MongoDB','Neo4j'],v:[4.2,5.6,9.8]}
+};
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C={sql:css('--sql'),mongo:css('--mongo'),neo:css('--neo'),ink:css('--ink'),mut:css('--mut'),line:css('--line')};
+const D=Chart.defaults;D.font.family='Bricolage Grotesque,sans-serif';D.font.size=12;D.color=C.mut;D.borderColor='rgba(100,90,130,.16)';D.maintainAspectRatio=false;D.layout.padding={top:18,right:12,left:2,bottom:2};
+D.plugins.legend.position='top';D.plugins.legend.align='start';Object.assign(D.plugins.legend.labels,{usePointStyle:true,boxWidth:8,boxHeight:8,padding:16,color:C.ink});
+Object.assign(D.plugins.tooltip,{backgroundColor:C.ink,padding:10,cornerRadius:6,boxPadding:4});
+if(D.scale){D.scale.grid.drawTicks=false;D.scale.border.color='rgba(100,90,130,.5)';D.scale.ticks.padding=6;D.scale.title.font={size:11,weight:'600'};D.scale.title.color=C.mut}
+D.elements.arc.borderColor='#fff';D.elements.arc.borderWidth=2;D.elements.point.borderColor='#fff';D.elements.point.borderWidth=1.5;if(D.datasets&&D.datasets.doughnut)D.datasets.doughnut.cutout='64%';
+Chart.register({id:'vl',afterDatasetsDraw(ch){if(ch.config.type!=='bar')return;const o=ch.options,h=o.indexAxis==='y';if(o.scales&&o.scales.x&&o.scales.x.stacked)return;let n=0;ch.data.datasets.forEach(d=>n+=d.data.length);if(n>12)return;const g=ch.ctx;g.save();g.font='600 11px Bricolage Grotesque,sans-serif';g.fillStyle=C.ink;
+ch.data.datasets.forEach((d,i)=>ch.getDatasetMeta(i).data.forEach((b,j)=>{const v=d.data[j];if(v==null)return;const f=v===0?'0':v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e4?Math.round(v/1e3)+'k':v>=1e3?(v/1e3).toFixed(1)+'k':v<1?v.toFixed(2):v<10?v.toFixed(1):Math.round(v);if(h){g.textAlign='left';g.textBaseline='middle';g.fillText(f,b.x+5,b.y)}else{g.textAlign='center';g.textBaseline='bottom';g.fillText(f,b.x,b.y-4)}}));g.restore()}});
+const AX={cFit:null,cRev:['Category','Revenue (£k)'],cIdx:['Query','Latency (ms, log scale)'],cRows:['Plan variant','Rows examined (log scale)'],cPipe:['Documents (log scale)','Pipeline stage'],cMIdx:['Query type','Time (ms, log scale)'],cPR:['PageRank','Customer'],cDeg:['Links per customer','Customers'],cHop:['Hop depth','Time (ms, log scale)'],cTx:['Isolation level','Transactions per second'],cLat:['Workload','Median latency (ms, log scale)'],cScale:['Rows in dataset','Throughput (thousand ops/s)'],cJoin:['Rows per table','Time (ms, log scale)'],cNF:['Normal form','Storage (MB)'],cDoc:['Parent document size','Read latency (ms, log scale)'],cTP:['Concurrent clients','Transactions per second'],cSecD:['Attack type','Payloads that succeed (%)'],cPct:['Percentile','Latency (ms)'],cBrk:['Database','Time per query (ms)'],cDead:['Concurrent clients','Deadlocks per 1,000 transactions'],cSC:['Links per customer','PageRank'],cCC:['Links per customer, k (log)','Share of customers with at least k links (log)'],cCard:['Plan node','Rows'],cMV:['Approach','Time (ms, log scale)'],cWarm:['Run number','Latency (ms)'],cLive:['Index strategy','Time per query (ms, log scale)'],cSim:['Strategy','Latency (ms, log scale)'],cECDF:['Latency (ms, log scale)','Queries completed (%)'],cSel:['Share of table returned','Time (ms, log scale)']};
+const mk=(id,type,labels,sets,o={})=>{const a=AX[id],sc={...(o.scales||{})};if(a){sc.x={...(sc.x||{}),title:{display:true,text:a[0]}};sc.y={...(sc.y||{}),title:{display:true,text:a[1]}}}
+return new Chart(document.getElementById(id),{type,data:{labels,datasets:sets.map(s=>({borderWidth:2,borderRadius:2,tension:0,maxBarThickness:46,pointRadius:type==='line'?3.5:undefined,...s}))},options:{plugins:{legend:{display:sets.length>1}},...o,scales:sc}})};
+const log={scales:{y:{type:'logarithmic'}}};
+const ds=(l,d,c)=>({label:l,data:d,backgroundColor:c,borderColor:c});
+mk('cFit','radar',DATA.fit.labels,[{label:'MySQL',data:DATA.fit.sql,borderColor:C.sql,backgroundColor:C.sql+'33'},{label:'MongoDB',data:DATA.fit.mongo,borderColor:C.mongo,backgroundColor:C.mongo+'33'},{label:'Neo4j',data:DATA.fit.neo,borderColor:C.neo,backgroundColor:C.neo+'33'}],{scales:{r:{min:0,max:5,ticks:{display:false}}}});
+mk('cRev','bar',DATA.rev.labels,[ds('Revenue £k',DATA.rev.v,C.sql)]);
+mk('cIdx','bar',DATA.idx.labels,[ds('No index',DATA.idx.before,C.neo),ds('Indexed',DATA.idx.after,C.sql)],log);
+mk('cRows','bar',DATA.rows.labels,[ds('Rows examined',DATA.rows.v,C.sql)],log);
+mk('cPipe','bar',DATA.pipe.labels,[ds('Documents',DATA.pipe.v,C.mongo)],{indexAxis:'y',scales:{x:{type:'logarithmic'}}});
+mk('cMIdx','bar',DATA.midx.labels,[ds('Collection scan',DATA.midx.scan,C.neo),ds('Indexed',DATA.midx.idx,C.mongo)],log);
+mk('cHop','line',DATA.hop.labels,[ds('MySQL joins',DATA.hop.sql,C.sql),ds('Neo4j',DATA.hop.neo,C.neo)],log);
+mk('cTx','bar',DATA.tx.labels.map(s=>s.replace(' ','\n')),[ds('TPS',DATA.tx.v,C.sql)]);
+mk('cLat','bar',DATA.lat.labels,[ds('MySQL',DATA.lat.sql,C.sql),ds('MongoDB',DATA.lat.mongo,C.mongo),ds('Neo4j',DATA.lat.neo,C.neo)],log);
+mk('cRad','radar',DATA.rad.labels,[{label:'MySQL',data:DATA.rad.sql,borderColor:C.sql,backgroundColor:C.sql+'33'},{label:'MongoDB',data:DATA.rad.mongo,borderColor:C.mongo,backgroundColor:C.mongo+'33'},{label:'Neo4j',data:DATA.rad.neo,borderColor:C.neo,backgroundColor:C.neo+'33'}],{scales:{r:{min:0,max:100,ticks:{display:false}}}});
+mk('cScale','line',DATA.scale.labels,[ds('MySQL',DATA.scale.sql,C.sql),ds('MongoDB',DATA.scale.mongo,C.mongo),ds('Neo4j',DATA.scale.neo,C.neo)]);
+mk('cStore','doughnut',DATA.store.labels,[{data:DATA.store.v,backgroundColor:[C.sql,C.mongo,C.neo],borderWidth:0}]);
+
+/* SQL gallery */
+const Q={'Window function':`<span class="k">SELECT</span> category, month, revenue,
+  <span class="k">RANK</span>() <span class="k">OVER</span> (<span class="k">PARTITION BY</span> month <span class="k">ORDER BY</span> revenue <span class="k">DESC</span>) rnk,
+  <span class="k">SUM</span>(revenue) <span class="k">OVER</span> (<span class="k">PARTITION BY</span> category <span class="k">ORDER BY</span> month) running
+<span class="k">FROM</span> monthly_revenue;`,
+'Recursive CTE':`<span class="k">WITH RECURSIVE</span> tree <span class="k">AS</span> (
+  <span class="k">SELECT</span> id, name, 0 depth <span class="k">FROM</span> categories <span class="k">WHERE</span> parent_id <span class="k">IS NULL</span>
+  <span class="k">UNION ALL</span>
+  <span class="k">SELECT</span> c.id, c.name, t.depth+1
+  <span class="k">FROM</span> categories c <span class="k">JOIN</span> tree t <span class="k">ON</span> c.parent_id = t.id)
+<span class="k">SELECT</span> * <span class="k">FROM</span> tree <span class="k">ORDER BY</span> depth;`,
+'Trigger':`<span class="k">CREATE TRIGGER</span> trg_stock <span class="k">AFTER INSERT ON</span> order_items
+<span class="k">FOR EACH ROW</span>
+  <span class="k">UPDATE</span> products <span class="k">SET</span> stock = stock - <span class="k">NEW</span>.qty
+  <span class="k">WHERE</span> id = <span class="k">NEW</span>.product_id;`,
+'Transaction':`<span class="k">START TRANSACTION</span>;
+<span class="k">UPDATE</span> accounts <span class="k">SET</span> bal = bal - 100 <span class="k">WHERE</span> id = 1;
+<span class="k">UPDATE</span> accounts <span class="k">SET</span> bal = bal + 100 <span class="k">WHERE</span> id = 2;
+<span class="k">COMMIT</span>; <span class="c">-- or ROLLBACK on any error</span>`,
+'EXPLAIN':`<span class="k">EXPLAIN ANALYZE SELECT</span> o.id <span class="k">FROM</span> orders o
+<span class="k">WHERE</span> o.customer_id = 42 <span class="k">AND</span> o.placed_at &gt;= <span class="s">'2024-01-01'</span>;
+<span class="c">-- Index range scan on o using idx_cust_date (customer_id, placed_at)</span>
+<span class="c">-- rows=18 actual time=0.04..0.06</span>`};
+const tabs=document.getElementById('tabs'),code=document.getElementById('code');
+Object.keys(Q).forEach((k,i)=>{const b=document.createElement('button');b.textContent=k;b.setAttribute('role','tab');b.onclick=()=>sel(k);tabs.appendChild(b)});
+function sel(k){[...tabs.children].forEach(b=>b.setAttribute('aria-selected',b.textContent===k));code.innerHTML=Q[k]}
+sel('Window function');
+
+/* Injection demo */
+const inj=document.getElementById('inj');
+function upd(){const v=inj.value,esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+document.getElementById('unsafe').innerHTML=esc("SELECT * FROM users WHERE name = '"+v+"'");
+document.getElementById('safe').innerHTML=esc("SELECT * FROM users WHERE name = ?")+"\n"+esc("-- bound param: "+JSON.stringify(v));
+document.getElementById('verdict').textContent=/'\s*(or|--|;)/i.test(v)?'The unsafe query changes meaning and returns every row. The parameterised one treats the whole input as a name.':'This input is harmless in both versions. Try one containing a quote.'}
+inj.oninput=upd;upd();
+
+/* Graph: seeded preferential-attachment network, live PageRank */
+(function(){
+let s=7;const rnd=()=>(s=(s*16807)%2147483647)/2147483647;
+const N=60,E=[],deg=Array(N).fill(0);
+for(let i=1;i<N;i++){for(let m=0;m<(i<4?1:2);m++){let t,tries=0;do{const tot=deg.slice(0,i).reduce((a,b)=>a+b+1,0);let r=rnd()*tot,j=0;while(j<i-1&&(r-=deg[j]+1)>0)j++;t=j}while(E.some(e=>e[0]===i&&e[1]===t)&&++tries<10);if(!E.some(e=>e[0]===i&&e[1]===t)){E.push([i,t]);deg[i]++;deg[t]++}}}
+const out=Array(N).fill(0);E.forEach(e=>out[e[0]]++);
+let pr=Array(N).fill(1/N);
+for(let it=0;it<50;it++){const n=Array(N).fill(.15/N);E.forEach(([a,b])=>n[b]+=.85*pr[a]/out[a]);pr=n}
+const names=Array.from({length:N},(_,i)=>'Customer '+(i+1));
+// communities via label propagation
+let lab=[...Array(N).keys()];const adj=Array.from({length:N},()=>[]);E.forEach(([a,b])=>{adj[a].push(b);adj[b].push(a)});
+{const t5=[...Array(N).keys()].sort((a,b)=>pr[b]-pr[a]).slice(0,5);lab=Array(N).fill(-1);const q=[];t5.forEach(h=>{lab[h]=h;q.push(h)});while(q.length){const u=q.shift();adj[u].forEach(v=>{if(lab[v]<0){lab[v]=lab[u];q.push(v)}})}}
+const cl=[...new Set(lab)],pal=['#7a5cc8','#E69F00','#CC79A7','#56B4E9','#5f6b7a'];
+const col=i=>pal[cl.indexOf(lab[i])%pal.length];
+// charts from graph
+const top=[...Array(N).keys()].sort((a,b)=>pr[b]-pr[a]).slice(0,8);
+mk('cPR','bar',top.map(i=>names[i]),[ds('PageRank',top.map(i=>+pr[i].toFixed(4)),C.neo)],{indexAxis:'y'});
+const hist={};deg.forEach(d=>hist[d]=(hist[d]||0)+1);const ks=Object.keys(hist).map(Number).sort((a,b)=>a-b);
+mk('cDeg','bar',ks,[ds('Nodes',ks.map(k=>hist[k]),C.neo)],{scales:{x:{title:{display:true,text:'degree'}}}});
+mk('cSC','scatter',[],[{label:'Customers',data:pr.map((v,i)=>({x:deg[i],y:+v.toFixed(4)})),backgroundColor:C.neo,borderColor:C.neo,pointRadius:5}],{plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'degree'}},y:{title:{display:true,text:'PageRank'}}}});
+mk('cComm','doughnut',cl.map(c=>'Hub #'+(c+1)),[{data:cl.map(c=>lab.filter(l=>l===c).length),backgroundColor:cl.map((c,i)=>pal[i%pal.length]),borderWidth:0}]);
+{const ks2=[...new Set(deg)].sort((a,b)=>a-b);mk('cCC','scatter',[],[{label:'Customers',data:ks2.map(k=>({x:k,y:+(deg.filter(d=>d>=k).length/N).toFixed(4)})),borderColor:C.neo,backgroundColor:C.neo,showLine:true,pointRadius:4,borderWidth:1.5}],{plugins:{legend:{display:false}},scales:{x:{type:'logarithmic'},y:{type:'logarithmic'}}})}
+// three linked views
+const cvs=[...document.querySelectorAll('.gc')],ctx=cvs.map(c=>c.getContext('2d')),P=[],Q=[],Rr=[],M=[],Ch=[],Bp=[],chA=[],Bc=[],Br=[];let S=330,mmV=0,csV=1,ORD2=[];
+const maxpr=Math.max(...pr),GN=cl.length,gi=i=>cl.indexOf(lab[i]),gc=i=>pal[gi(i)%pal.length],kk=()=>S/330,hubs=new Set(top.slice(0,5));
+const anc=g=>({x:S/2+Math.cos(Math.PI*2*g/GN-Math.PI/2)*S*.25,y:S/2+Math.sin(Math.PI*2*g/GN-Math.PI/2)*S*.25});
+const pos=(pi,i)=>[P,Q,Rr,M,Ch,Bp][pi][i],chR=()=>S*.34;
+const rad=[i=>(3+Math.sqrt(deg[i])*1.9)*kk(),i=>(2.8+Math.sqrt(deg[i])*1.7)*kk(),i=>(2.4+Math.sqrt(deg[i])*1.35)*kk(),()=>csV/2,i=>(2.2+Math.sqrt(deg[i])*1.1)*kk(),i=>(2.4+Math.sqrt(pr[i]/maxpr)*8)*kk()];
+function statics(){const cx=S/2,gap=.34,cnt=Array(GN).fill(0),tiers=[[],[],[]],rr=[.1,.26,.42];for(let i=0;i<N;i++)cnt[gi(i)]++;
+const w=cnt.map(c=>(Math.PI*2-GN*gap)*c/N),st=[];let acc=-Math.PI/2;w.forEach((x,g)=>{st[g]=acc+gap/2;acc+=x+gap});
+[...Array(N).keys()].sort((a,b)=>pr[b]-pr[a]).forEach((i,r)=>tiers[r<5?0:r<20?1:2].push(i));
+tiers.forEach((t,ti)=>{for(let g=0;g<GN;g++){const m=t.filter(i=>gi(i)===g);m.forEach((i,j)=>{const th=st[g]+((j+.5)/m.length)*w[g];Q[i]={x:cx+Math.cos(th)*rr[ti]*S,y:cx+Math.sin(th)*rr[ti]*S}})}});
+const m0=S*.06;[...Array(N).keys()].sort((a,b)=>gi(a)-gi(b)||pr[b]-pr[a]).forEach((i,j)=>{Rr[i]={x:m0+j*(S-2*m0)/(N-1),y:S/2}});
+{const o2=[...Array(N).keys()].sort((a,b)=>gi(a)-gi(b)||pr[b]-pr[a]);mmV=S*.1;csV=(S-2*mmV)/N;o2.forEach((i,j)=>{M[i]={x:mmV+j*csV+csV/2,y:mmV+j*csV+csV/2,idx:j}});ORD2=o2}
+{const g2=.1,wd=cnt.map(c=>(Math.PI*2-GN*g2)*c/N),R=S*.34;let a=-Math.PI/2;for(let g=0;g<GN;g++){const a0=a+g2/2,m=[...Array(N).keys()].filter(i=>gi(i)===g).sort((x,y)=>pr[y]-pr[x]);chA[g]={a0,a1:a0+wd[g]};m.forEach((i,j)=>{const th=a0+((j+.5)/m.length)*wd[g];Ch[i]={x:cx+Math.cos(th)*R,y:cx+Math.sin(th)*R}});a+=wd[g]+g2}}
+{const mc=Math.max(...cnt);for(let g=0;g<GN;g++){const an=Math.PI*2*g/GN-Math.PI/2,bx=cx+Math.cos(an)*S*.28,by=cx+Math.sin(an)*S*.28,br=S*.155*Math.sqrt(cnt[g]/mc);Bc[g]={x:bx,y:by};Br[g]=br;const m=[...Array(N).keys()].filter(i=>gi(i)===g).sort((x,y)=>pr[y]-pr[x]),c=br*.9/Math.sqrt(m.length+2);m.forEach((i,j)=>{const r=j?c*Math.sqrt(j+2):0,t=j*2.39996;Bp[i]={x:bx+Math.cos(t)*r,y:by+Math.sin(t)*r}})}}
+}
+function size(){const r=cvs[0].getBoundingClientRect(),d=devicePixelRatio||1,o=S;S=r.width||330;cvs.forEach((c,i)=>{c.width=S*d;c.height=S*d;ctx[i].setTransform(d,0,0,d,0,0)});P.forEach(p=>{p.x*=S/o;p.y*=S/o});statics()}
+size();for(let i=0;i<N;i++){const a=anc(gi(i));P.push({x:a.x+(Math.random()-.5)*S*.12,y:a.y+(Math.random()-.5)*S*.12,vx:0,vy:0})}addEventListener('resize',size);
+let sel=-1,hov=-1,hovP=-1,drag=-1,path=[],pset=new Set(),act=null,fr=0;
+const setSel=i=>{sel=i;path=[];pset=new Set();act=i>=0?new Set([i,...adj[i]]):null};
+const pe=(a,b)=>{const i=path.indexOf(a),j=path.indexOf(b);return i>=0&&j>=0&&Math.abs(i-j)===1},eh=(a,b)=>path.length?pe(a,b):(sel>=0&&(a===sel||b===sel)),lit=i=>!act&&!path.length||(path.length?pset.has(i):act.has(i));
+const cl2=(v,a,b)=>Math.min(b,Math.max(a,v));
+function step(a){const k=kk();
+for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){const A=P[i],B=P[j];let dx=A.x-B.x,dy=A.y-B.y;const d2=dx*dx+dy*dy+.1,d=Math.sqrt(d2),mn=rad[0](i)+rad[0](j)+8*k;let f=420*k*k/d2;if(d<mn)f+=(mn-d)*.25;dx/=d;dy/=d;A.vx+=dx*f;A.vy+=dy*f;B.vx-=dx*f;B.vy-=dy*f}
+E.forEach(([i,j])=>{const A=P[i],B=P[j],sm=gi(i)===gi(j),dx=B.x-A.x,dy=B.y-A.y,d=Math.hypot(dx,dy)||1,f=(d-(sm?34:70)*k)*(sm?.02:.006);A.vx+=dx/d*f;A.vy+=dy/d*f;B.vx-=dx/d*f;B.vy-=dy/d*f});
+P.forEach((p,i)=>{const t=anc(gi(i));p.vx+=(t.x-p.x)*.012;p.vy+=(t.y-p.y)*.012;if(i!==drag){p.x=cl2(p.x+p.vx*.2*a,16,S-16);p.y=cl2(p.y+p.vy*.2*a,16,S-16)}p.vx*=.8;p.vy*=.8})}
+const hx=h=>[1,3,5].map(o=>parseInt(h.substr(o,2),16)),tint=c=>'rgb('+hx(c).map(v=>Math.round(v+(255-v)*.88)).join(',')+')';
+function hull(pts){pts=[...pts].sort((a,b)=>a.x-b.x||a.y-b.y);if(pts.length<3)return pts;const cr=(o,a,b)=>(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x),lo=[],up=[];pts.forEach(p=>{while(lo.length>1&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p)});[...pts].reverse().forEach(p=>{while(up.length>1&&cr(up[up.length-2],up[up.length-1],p)<=0)up.pop();up.push(p)});return lo.slice(0,-1).concat(up.slice(0,-1))}
+function tag(g,t,px,py){g.font='600 11px Bricolage Grotesque,sans-serif';g.textAlign='center';g.lineJoin='round';g.lineWidth=4;g.strokeStyle='#fff';g.strokeText(t,px,py);g.fillStyle=C.ink;g.fillText(t,px,py)}
+const ord=[...Array(N).keys()].sort((a,b)=>deg[a]-deg[b]);
+function drawPanel(pi,g){const k=kk(),cx=S/2;g.clearRect(0,0,S,S);g.setLineDash([]);g.lineCap='round';g.lineJoin='round';
+if(pi===3){drawMatrix(g,k);return}
+if(pi===4){g.lineCap='butt';for(let q=0;q<GN;q++){g.strokeStyle=pal[q%pal.length];g.lineWidth=6*k;g.beginPath();g.arc(cx,cx,chR()+12*k,chA[q].a0,chA[q].a1);g.stroke()}g.lineCap='round'}
+if(pi===5)for(let q=0;q<GN;q++){g.fillStyle=tint(pal[q%pal.length]);g.strokeStyle=pal[q%pal.length]+'66';g.lineWidth=1;g.beginPath();g.arc(Bc[q].x,Bc[q].y,Br[q]+6*k,0,7);g.fill();g.stroke()}
+if(pi===0)for(let q=0;q<GN;q++){const pts=P.filter((p,i)=>gi(i)===q),h=hull(pts),c=tint(pal[q%pal.length]);g.fillStyle=c;g.strokeStyle=c;g.lineWidth=24*k;g.beginPath();h.forEach((p,j)=>g[j?'lineTo':'moveTo'](p.x,p.y));g.closePath();g.fill();g.stroke();if(h.length<2){g.beginPath();g.arc(h[0].x,h[0].y,12*k,0,7);g.fill()}}
+if(pi===1){[.1,.26,.42].forEach(r=>{g.setLineDash([2,4]);g.lineWidth=1;g.strokeStyle='rgba(100,90,130,.35)';g.beginPath();g.arc(cx,cx,r*S,0,7);g.stroke()});g.setLineDash([]);g.font='11px Bricolage Grotesque,sans-serif';g.textAlign='left';g.fillStyle=C.mut;g.fillText('rings, inner to outer:',10,18);g.fillText('top 5, next 15, rest',10,32)}
+if(pi===2){g.strokeStyle='rgba(100,90,130,.3)';g.lineWidth=1;g.beginPath();g.moveTo(S*.04,S/2);g.lineTo(S*.96,S/2);g.stroke();g.font='11px Bricolage Grotesque,sans-serif';g.textAlign='left';g.fillStyle=C.mut;g.fillText('within a group',10,18);g.fillText('across groups',10,S-10)}
+E.forEach(([a,b])=>{const h=eh(a,b),A=pos(pi,a),B=pos(pi,b),sm=gi(a)===gi(b);if(pi===5&&!h)return;g.beginPath();
+if(pi===0){g.moveTo(A.x,A.y);g.lineTo(B.x,B.y)}
+else if(pi===1){g.moveTo(A.x,A.y);g.quadraticCurveTo(cx+((A.x+B.x)/2-cx)*.3,cx+((A.y+B.y)/2-cx)*.3,B.x,B.y)}
+else if(pi===2)g.arc((A.x+B.x)/2,S/2,Math.abs(B.x-A.x)/2,sm?Math.PI:0,sm?0:Math.PI,false);
+else if(pi===4){g.moveTo(A.x,A.y);g.quadraticCurveTo(cx+((A.x+B.x)/2-cx)*.15,cx+((A.y+B.y)/2-cx)*.15,B.x,B.y)}
+else{g.moveTo(A.x,A.y);g.lineTo(B.x,B.y)}
+g.globalAlpha=h?1:(act||path.length)?.07:(pi===2||pi===4)?(sm?.6:.2):pi===1?.3:.55;g.strokeStyle=h?C.ink:((pi===2||pi===4)&&sm?gc(a):'#8f89a6');g.lineWidth=h?2.2:((pi===2||pi===4)&&sm?1.3:1);g.stroke();g.globalAlpha=1});
+ord.forEach(i=>{const p=pos(pi,i),r=rad[pi](i)*(i===hov&&hovP===pi?1.2:1);g.globalAlpha=lit(i)?1:.2;g.fillStyle=gc(i);g.beginPath();g.arc(p.x,p.y,r,0,7);g.fill();g.lineWidth=1.6;g.strokeStyle='#fff';g.stroke();
+if(i===sel||pset.has(i)){g.lineWidth=1.8;g.strokeStyle=C.ink;g.beginPath();g.arc(p.x,p.y,r+3,0,7);g.stroke()}g.globalAlpha=1});
+ord.forEach(i=>{if(hubs.has(i)||i===sel||(path.length<8&&pset.has(i))||(i===hov&&hovP===pi)){const p=pos(pi,i);if(pi===4){const th=Math.atan2(p.y-cx,p.x-cx),rr=chR()+28*k;tag(g,'#'+(i+1),cx+Math.cos(th)*rr,cx+Math.sin(th)*rr+4)}else tag(g,'#'+(i+1),p.x,pi===2?p.y+rad[2](i)+13:p.y-rad[pi](i)-5)}})}
+function drawMatrix(g,k){const mm=mmV,cs=csV;g.clearRect(0,0,S,S);let s0=0;
+for(let q=0;q<GN;q++){const c=ORD2.filter(i=>gi(i)===q).length;g.fillStyle=tint(pal[q%pal.length]);g.fillRect(mm+s0*cs,mm+s0*cs,c*cs,c*cs);s0+=c}
+if(sel>=0){const x=M[sel].idx;g.fillStyle='rgba(30,22,48,.08)';g.fillRect(mm,mm+x*cs,N*cs,cs);g.fillRect(mm+x*cs,mm,cs,N*cs)}
+E.forEach(([a,b])=>{const h=eh(a,b),sm=gi(a)===gi(b);g.globalAlpha=h?1:(act||path.length)?.12:.9;g.fillStyle=h?C.ink:sm?gc(a):'#8f89a6';[[a,b],[b,a]].forEach(([r,c])=>g.fillRect(mm+M[c].idx*cs+.4,mm+M[r].idx*cs+.4,cs-.8,cs-.8))});g.globalAlpha=1;
+ORD2.forEach((i,j)=>{g.fillStyle=gc(i);g.globalAlpha=lit(i)?1:.25;g.fillRect(mm-8,mm+j*cs,4,cs-.6);g.fillRect(mm+j*cs,mm-8,cs-.6,4)});g.globalAlpha=1;
+g.strokeStyle='rgba(100,90,130,.4)';g.lineWidth=1;g.strokeRect(mm,mm,N*cs,N*cs);g.font='600 11px Bricolage Grotesque,sans-serif';g.textAlign='right';g.lineJoin='round';
+ORD2.forEach((i,j)=>{if(hubs.has(i)||i===sel||(i===hov&&hovP===3)){const y=mm+j*cs+cs/2+4;g.lineWidth=4;g.strokeStyle='#fff';g.strokeText('#'+(i+1),mm-12,y);g.fillStyle=C.ink;g.fillText('#'+(i+1),mm-12,y)}});
+g.font='11px Bricolage Grotesque,sans-serif';g.textAlign='left';g.fillStyle=C.mut;g.fillText('each square is one link',mm,S-8)}
+(function loop(){const a=Math.max(0,1-fr/800);if(a>.005||drag>=0){step(Math.max(a,drag>=0?.35:0));fr++}ctx.forEach((g,pi)=>drawPanel(pi,g));requestAnimationFrame(loop)})();
+const info=i=>{document.getElementById('ginfo').textContent=names[i]+' · '+deg[i]+' links · PageRank '+pr[i].toFixed(4)+' · group of hub #'+(lab[i]+1)};
+document.getElementById('legend').innerHTML=cl.map((h,j)=>'<span><i style="display:inline-block;width:11px;height:11px;border-radius:50%;background:'+pal[j%pal.length]+';margin-right:6px"></i>Hub #'+(h+1)+' group</span>').join('');
+cvs.forEach((cv,pi)=>{const at=e=>{const r=cv.getBoundingClientRect(),mx=(e.clientX-r.left)*S/r.width,my=(e.clientY-r.top)*S/r.height;if(pi===3){const j=Math.floor((my-mmV)/csV);return j>=0&&j<N&&mx>=mmV-12&&mx<=S-mmV+4?{i:ORD2[j],mx,my}:{i:-1,mx,my}}for(let i=N-1;i>=0;i--){const p=pos(pi,i);if(Math.hypot(p.x-mx,p.y-my)<rad[pi](i)+4)return{i,mx,my}}return{i:-1,mx,my}};
+cv.onpointerdown=e=>{const h=at(e);if(h.i<0){setSel(-1);return}setSel(h.i);info(h.i);if(pi===0){drag=h.i;fr=500;cv.setPointerCapture(e.pointerId)}};
+cv.onpointermove=e=>{const h=at(e);hov=h.i;hovP=pi;cv.style.cursor=h.i>=0?(pi===0?'grab':'pointer'):'default';if(drag>=0&&pi===0){P[drag].x=cl2(h.mx,14,S-14);P[drag].y=cl2(h.my,14,S-14)}};
+cv.onpointerleave=()=>{hov=-1};cv.onpointerup=()=>{drag=-1}});
+document.getElementById('sp').onclick=()=>{const a=sel>=0?sel:Math.floor(Math.random()*N);let t;do{t=Math.floor(Math.random()*N)}while(t===a);
+const pv=Array(N).fill(-1);pv[a]=a;const q=[a];while(q.length){const u=q.shift();adj[u].forEach(v=>{if(pv[v]<0){pv[v]=u;q.push(v)}})}
+setSel(a);path=[];for(let v=t;v!==a;v=pv[v])path.push(v);path.push(a);path.reverse();pset=new Set(path);
+document.getElementById('ginfo').textContent=path.map(i=>names[i]).join(' → ')+'  ('+(path.length-1)+' hops, found by breadth-first search; Cypher: shortestPath)'};
+})();
+
+mk('cCard','bar',['Index scan','PK lookup','Join','Sort'],[ds('Estimated',[20,1,18,18],C.mut),ds('Actual',[18,1,18,18],C.sql)]);
+mk('cMV','bar',['Live aggregate','Summary table'],[ds('ms',[2400,3],C.sql)],{scales:{y:{type:'logarithmic'}}});
+mk('cDead','line',['8','16','32','64','128'],[ds('Deadlocks',[0.2,0.9,3.1,9.8,27],C.neo)],{scales:{x:{title:{display:true,text:'concurrent clients'}}}});
+const sl=document.getElementById('sl'),sim=mk('cSim','bar',['MySQL full scan','MySQL B+-tree','MongoDB index','Neo4j 3-hop'],[ds('ms',[0,0,0,0],C.sql)],{scales:{y:{type:'logarithmic',min:.01}},plugins:{legend:{display:false}}});
+function runSim(){const n=Math.pow(10,+sl.value);document.getElementById('slv').textContent=Math.round(n).toLocaleString();
+const d=sim.data.datasets[0];d.data=[n*4e-5,.02*Math.log2(n),.03*Math.log2(n),.5+.2*Math.log10(n)];d.backgroundColor=[C.neo,C.sql,C.mongo,C.neo].map((c,i)=>i?c:C.mut);sim.update('none')}
+sl.oninput=runSim;runSim();
+
+/* Live SQL lab */
+(function(){
+const $=id=>document.getElementById(id);let db=null,live=null;
+const PRE={'Top spenders (window)':"SELECT c.name, SUM(o.amount) AS total,\n  RANK() OVER (ORDER BY SUM(o.amount) DESC) AS rnk\nFROM orders o JOIN customers c ON c.id=o.customer_id\nGROUP BY c.id ORDER BY total DESC LIMIT 10;",
+'Monthly revenue (CTE)':"WITH m AS (\n  SELECT substr(placed_at,1,7) AS month, SUM(amount) AS rev\n  FROM orders GROUP BY month)\nSELECT month, ROUND(rev) AS rev,\n  ROUND(AVG(rev) OVER (ORDER BY month ROWS 2 PRECEDING)) AS avg3\nFROM m ORDER BY month LIMIT 12;",
+'Category tree (recursive)':"WITH RECURSIVE t(id,name,depth) AS (\n  SELECT id,name,0 FROM categories WHERE parent_id IS NULL\n  UNION ALL\n  SELECT c.id,c.name,t.depth+1 FROM categories c JOIN t ON c.parent_id=t.id)\nSELECT substr('        ',1,depth*2)||name AS category, depth FROM t;",
+'Lookup (plan demo)':"SELECT COUNT(*), ROUND(SUM(amount)) FROM orders WHERE customer_id = 42;"};
+const pr=$('presets');Object.keys(PRE).forEach(k=>{const b=document.createElement('button');b.textContent=k;b.onclick=()=>{$('sqlin').value=PRE[k];run()};pr.appendChild(b)});
+function render(t,r){t.innerHTML='';if(!r){return}const h=t.insertRow();r.columns.forEach(c=>{const th=document.createElement('th');th.textContent=c;h.appendChild(th)});r.values.slice(0,12).forEach(v=>{const row=t.insertRow();v.forEach(x=>row.insertCell().textContent=x===null?'NULL':x)})}
+function run(){if(!db)return;const q=$('sqlin').value;try{const t=performance.now(),r=db.exec(q);$('rtime').textContent=(performance.now()-t).toFixed(1)+' ms'+(r[0]?' · '+r[0].values.length+' rows':'');render($('rres'),r[0]);const p=db.exec('EXPLAIN QUERY PLAN '+q);$('rplan').textContent=p[0]?p[0].values.map(v=>v[3]).join('\n'):''}catch(e){$('rtime').textContent='Error: '+e.message;$('rres').innerHTML='';$('rplan').textContent=''}}
+$('run').onclick=run;
+$('load').onclick=async()=>{const b=$('load'),st=$('lstat');b.disabled=true;st.textContent='Loading SQL engine…';
+try{const SQL=await initSqlJs({locateFile:f=>'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/'+f});
+st.textContent='Generating 200,000 orders…';await new Promise(r=>setTimeout(r,40));
+db=new SQL.Database();db.run("CREATE TABLE customers(id INTEGER PRIMARY KEY,name TEXT,city TEXT);CREATE TABLE orders(id INTEGER PRIMARY KEY,customer_id INT,placed_at TEXT,amount REAL,category TEXT);CREATE TABLE categories(id INTEGER PRIMARY KEY,name TEXT,parent_id INT);INSERT INTO categories VALUES(1,'All',NULL),(2,'Electronics',1),(3,'Phones',2),(4,'Laptops',2),(5,'Home',1),(6,'Kitchen',5),(7,'Garden',5),(8,'Books',1);");
+let z=42;const R=()=>(z=(z*16807)%2147483647)/2147483647;
+const cities=['London','Bengaluru','Pune','Berlin','Austin','Lagos'],cats=['Shoes','Electronics','Home','Books','Beauty','Sports'];
+db.run('BEGIN');let a=db.prepare('INSERT INTO customers VALUES(?,?,?)');for(let i=1;i<=5000;i++)a.run([i,'Customer '+i,cities[Math.floor(R()*6)]]);a.free();
+a=db.prepare('INSERT INTO orders VALUES(?,?,?,?,?)');const d0=Date.UTC(2023,0,1);
+for(let i=1;i<=200000;i++)a.run([i,1+Math.floor(Math.pow(R(),1.6)*5000),new Date(d0+Math.floor(R()*730)*864e5).toISOString().slice(0,10),Math.round((5+R()*R()*400)*100)/100,cats[Math.floor(R()*6)]]);
+a.free();db.run('COMMIT');
+st.textContent='Ready: 5,000 customers, 200,000 orders. Edit any query and run it.';$('labui').hidden=false;$('benchbox').hidden=false;$('sqlin').value=PRE['Top spenders (window)'];run()}
+catch(e){st.textContent='Could not load the SQL engine. This needs an internet connection to cdnjs.';b.disabled=false}};
+const timeIt=()=>{const s=db.prepare('SELECT COUNT(*),SUM(amount) FROM orders WHERE customer_id=?'),t=performance.now();for(let i=0;i<300;i++){s.bind([1+(i*37)%5000]);s.step();s.reset()}const d=(performance.now()-t)/300;s.free();return d};
+$('bm').onclick=async()=>{const b=$('bm');b.disabled=true;$('bmnote').textContent='Running…';await new Promise(r=>setTimeout(r,40));
+db.run('DROP INDEX IF EXISTS i1;DROP INDEX IF EXISTS i2');const n=timeIt();db.run('CREATE INDEX i1 ON orders(customer_id)');const i=timeIt();db.run('DROP INDEX i1;CREATE INDEX i2 ON orders(customer_id,amount)');const c=timeIt();db.run('DROP INDEX i2');
+const v=[n,i,c].map(x=>+x.toFixed(4));if(!live)live=mk('cLive','bar',['No index','Index (customer_id)','Covering (customer_id, amount)'],[ds('ms per query',v,C.sql)],{scales:{y:{type:'logarithmic'}},plugins:{legend:{display:false}}});else{live.data.datasets[0].data=v;live.update()}
+$('bmnote').textContent='Measured here: the index is about '+Math.round(n/i)+'× faster; the covering index about '+Math.round(n/c)+'×.';b.disabled=false};
+})();
+
+/* Mongo aggregation playground */
+(function(){
+const $=id=>document.getElementById(id);let z=7;const R=()=>(z=(z*16807)%2147483647)/2147483647;
+const cats=['Shoes','Electronics','Home','Books','Beauty','Sports'];
+const docs=Array.from({length:20000},(_,i)=>({_id:i+1,name:'Product '+(i+1),category:cats[Math.floor(R()*6)],price:Math.round((10+R()*R()*290)*100)/100,reviews:Array.from({length:Math.floor(R()*7)},()=>({user:Math.floor(R()*5000),stars:1+Math.floor(Math.pow(R(),.6)*5)}))}));
+const get=(d,p)=>p.split('.').reduce((o,k)=>o==null?o:o[k],d),val=(d,e)=>typeof e==='string'&&e[0]==='$'?get(d,e.slice(1)):e;
+const ops={$gt:(a,b)=>a>b,$gte:(a,b)=>a>=b,$lt:(a,b)=>a<b,$lte:(a,b)=>a<=b,$ne:(a,b)=>a!==b,$eq:(a,b)=>a===b,$in:(a,b)=>b.includes(a)};
+const match=(d,q)=>Object.keys(q).every(k=>{const c=q[k],v=get(d,k);return c&&typeof c==='object'?Object.keys(c).every(o=>ops[o](v,c[o])):v===c});
+const stage={
+$match:(a,q)=>a.filter(d=>match(d,q)),
+$unwind:(a,f)=>{f=f.slice(1);return a.flatMap(d=>(d[f]||[]).map(x=>({...d,[f]:x})))},
+$limit:(a,n)=>a.slice(0,n),
+$sort:(a,k)=>{const ks=Object.keys(k);return [...a].sort((x,y)=>{for(const f of ks){const u=get(x,f),v=get(y,f);if(u!==v)return(u<v?-1:1)*k[f]}return 0})},
+$project:(a,k)=>a.map(d=>{const o={_id:d._id};Object.keys(k).forEach(f=>{if(k[f])o[f]=get(d,f)});return o}),
+$group:(a,g)=>{const m=new Map(),fs=Object.keys(g).filter(k=>k!=='_id');a.forEach(d=>{const id=JSON.stringify(val(d,g._id));let r=m.get(id);if(!r){r={_id:val(d,g._id),_s:{}};m.set(id,r)}
+fs.forEach(f=>{const[op,e]=Object.entries(g[f])[0],v=val(d,e),st=r._s[f]||(r._s[f]={s:0,n:0,mn:Infinity,mx:-Infinity});st.s+=+v||0;st.n++;st.mn=Math.min(st.mn,v);st.mx=Math.max(st.mx,v);st.op=op})});
+return [...m.values()].map(r=>{const o={_id:r._id};Object.keys(r._s).forEach(f=>{const t=r._s[f];o[f]={$sum:t.s,$avg:t.s/t.n,$min:t.mn,$max:t.mx}[t.op]});return o})}};
+const PRE={'Avg rating by category':[{$unwind:'$reviews'},{$group:{_id:'$category',avg:{$avg:'$reviews.stars'},n:{$sum:1}}},{$sort:{avg:-1}}],
+'Premium shoes':[{$match:{category:'Shoes',price:{$gte:150}}},{$project:{name:1,price:1}},{$sort:{price:-1}},{$limit:5}],
+'Price stats':[{$group:{_id:'$category',avgPrice:{$avg:'$price'},max:{$max:'$price'},count:{$sum:1}}},{$sort:{count:-1}}]};
+const fmt=p=>'[\n '+p.map(x=>JSON.stringify(x)).join(',\n ')+'\n]';
+function run(){try{const pl=JSON.parse($('mpin').value),t=performance.now();let a=docs;pl.forEach(st=>{const k=Object.keys(st)[0];if(!stage[k])throw Error('Unsupported stage '+k);a=stage[k](a,st[k])});
+$('mtime').textContent=(performance.now()-t).toFixed(1)+' ms · '+a.length+' documents out';$('mout').textContent=JSON.stringify(a.slice(0,8),(k,v)=>typeof v==='number'&&v%1?Math.round(v*100)/100:v,1)}catch(e){$('mtime').textContent='Error: '+e.message;$('mout').textContent=''}}
+Object.keys(PRE).forEach(k=>{const b=document.createElement('button');b.textContent=k;b.onclick=()=>{$('mpin').value=fmt(PRE[k]);run()};$('mpre').appendChild(b)});
+$('mrun').onclick=run;$('mpin').value=fmt(PRE['Avg rating by category']);run();
+})();
+
+/* extra visuals */
+mk('cJoin','line',['1k','10k','100k','1M','10M'],[ds('Nested loop',[.2,15,1500,150000,15000000],C.neo),ds('Hash join',[.1,.6,6,70,800],C.sql),ds('Merge join',[.12,.5,5,55,650],C.mongo),ds('Index nested loop',[.05,.08,.12,.2,.3],C.mut)],log);
+mk('cNF','bar',['1NF','2NF','3NF','BCNF'],[ds('MB',[840,520,310,305],C.sql)]);
+mk('cDoc','line',['1 KB','10 KB','100 KB','1 MB','5 MB'],[ds('Embedded',[.4,.6,2.1,14,90],C.mongo),ds('Referenced',[.9,1.4,2.4,6,22],C.mut)],log);
+mk('cColl','doughnut',['products','reviews','orders','events'],[{data:[2.1,3.4,1.2,.9],backgroundColor:[C.mongo,C.sql,C.neo,C.mut],borderWidth:0}]);
+mk('cTP','line',['8','16','32','64','128'],[ds('READ COMMITTED',[4200,7300,9400,9600,8100],C.mongo),ds('REPEATABLE READ',[4000,6900,8700,8900,7000],C.sql),ds('SERIALIZABLE',[3600,4900,4100,3000,1800],C.neo)],{scales:{x:{title:{display:true,text:'clients'}}}});
+mk('cSecD','bar',['Tautology','UNION','Stacked query','Blind (time)','Second-order'],[ds('Concatenated SQL',[100,92,40,85,70],C.neo),ds('Parameterised',[0,0,0,0,0],C.sql)],{scales:{y:{max:100}}});
+mk('cPct','bar',['p50','p95','p99'],[ds('MySQL',[1.2,4.8,11],C.sql),ds('MongoDB',[.9,3.5,14],C.mongo),ds('Neo4j',[2.1,9,31],C.neo)]);
+mk('cBrk','bar',['MySQL','MongoDB','Neo4j'],[ds('Parse & plan',[.3,.1,.4],C.mut),ds('Execute',[1.4,.9,3.1],C.sql),ds('Fetch & network',[.5,.6,.8],C.mongo)],{scales:{x:{stacked:true},y:{stacked:true}}});
+(function(){const rows={'READ COMMITTED':[.1,.2,.4,.9,2.1],'REPEATABLE READ':[.2,.5,1.1,2.8,6.5],'SERIALIZABLE':[.6,1.9,5.2,14,31]},cl=[8,16,32,64,128];
+let h='<table><tr><th></th>'+cl.map(c=>'<th>'+c+'</th>').join('')+'</tr>';
+Object.keys(rows).forEach(k=>{h+='<tr><td>'+k+'</td>'+rows[k].map(v=>'<td style="background:color-mix(in srgb,var(--neo) '+Math.min(90,v*3+6)+'%,transparent);text-align:center">'+v+'%</td>').join('')+'</tr>'});
+document.getElementById('heat').innerHTML=h+'</table>'})();
+
+(function(){const v=[];for(let i=0;i<30;i++){const n=Math.sin(i*12.9898)*43758.5453;v.push(i<4?+(46-i*10).toFixed(1):+(4+(n-Math.floor(n))*1.2).toFixed(2))}
+mk('cWarm','line',v.map((_,i)=>i+1),[{label:'Latency (ms)',data:v,borderColor:C.sql,backgroundColor:C.sql,pointBackgroundColor:v.map((_,i)=>i<4?C.neo:C.sql),pointRadius:4,tension:.2,borderWidth:2}],{plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'run'}}}})})();
+
+/* heatmap: slowdown vs best */
+(function(){const L=DATA.lat,db=['sql','mongo','neo'],nm=['MySQL','MongoDB','Neo4j'];let h='<table><tr><th>Workload</th>'+nm.map(n=>'<th style="text-align:center">'+n+'</th>').join('')+'</tr>';
+L.labels.forEach((w,j)=>{const v=db.map(d=>L[d][j]),m=Math.min(...v);h+='<tr><td>'+w+'</td>'+v.map(x=>{const r=x/m,b=r===1,a=b?.28:Math.min(.6,Math.log10(r)/3.5+.1);return '<td style="text-align:center;font-weight:'+(b?700:500)+';background:color-mix(in srgb,'+(b?'var(--mongo)':'var(--neo)')+' '+Math.round(a*100)+'%,#fff)">'+(b?'best':(r<10?r.toFixed(1):Math.round(r).toLocaleString())+'×')+'</td>'}).join('')+'</tr>'});
+document.getElementById('hm').innerHTML=h+'</table>'})();
+/* ECDF and index crossover */
+(function(){function ec(med,sig,seed){let z=seed;const R=()=>(z=(z*16807)%2147483647)/2147483647,v=[];for(let i=0;i<400;i++){const u=Math.sqrt(-2*Math.log(R()||1e-9))*Math.cos(2*Math.PI*R());v.push(med*Math.exp(sig*u))}v.sort((a,b)=>a-b);return v.filter((_,i)=>i%6===0).map((x,i)=>({x:+x.toFixed(3),y:+((i*6+1)/4).toFixed(1)}))}
+const ln=(l,d,c)=>({label:l,data:d,borderColor:c,backgroundColor:c,showLine:true,pointRadius:0,borderWidth:2.2});
+mk('cECDF','scatter',[],[ln('MySQL',ec(1.2,.5,11),C.sql),ln('MongoDB',ec(.9,.65,23),C.mongo),ln('Neo4j',ec(2.1,.85,37),C.neo)],{scales:{x:{type:'logarithmic'},y:{min:0,max:100}}});
+const sel=[.01,.1,1,10,30,100];mk('cSel','line',['0.01%','0.1%','1%','10%','30%','100%'],[ds('Full scan',sel.map(()=>40),C.mut),ds('Index lookup',sel.map(s=>+(.02*Math.log2(1e6)+4*s).toFixed(2)),C.sql)],{scales:{y:{type:'logarithmic'}}})})();
+/* sankey */
+(function(){const f=v=>v>=1e3?Math.round(v/1e3)+'k':v,w=v=>Math.max(3,Math.sqrt(v)*.085),g=14,ns='http://www.w3.org/2000/svg',svg=document.getElementById('sk');
+const Ln=[['customers',5e3],['products',1.2e5],['orders',2e5],['reviews',6.4e5]],Rn=[['MongoDB · products',1.2e5,C.mongo,'reviews embedded'],['Neo4j · Customer',5e3,C.neo,''],['Neo4j · Product',1.2e5,C.neo,''],['Neo4j · BOUGHT',2e5,C.neo,'relationships']],
+Fl=[[0,1,5e3,C.neo],[1,0,1.2e5,C.mongo],[1,2,1.2e5,C.neo],[3,0,6.4e5,C.mongo],[2,3,2e5,C.neo]];
+const lo=Ln.map((n,i)=>Math.max(14,Fl.filter(x=>x[0]===i).reduce((a,x)=>a+w(x[2]),0))),ri=Rn.map((n,i)=>Math.max(14,Fl.filter(x=>x[1]===i).reduce((a,x)=>a+w(x[2]),0)));
+const pos=a=>{let y=(270-a.reduce((s,v)=>s+v,0)-g*(a.length-1))/2;return a.map(h=>{const t=y;y+=h+g;return t})},ly=pos(lo),ry=pos(ri),lc=Ln.map(()=>0),rc=Rn.map(()=>0);
+const el=(t,at,txt)=>{const e=document.createElementNS(ns,t);for(const k in at)e.setAttribute(k,at[k]);if(txt)e.textContent=txt;svg.appendChild(e);return e};
+Fl.forEach(([l,r,v,c])=>{const wd=w(v),y1=ly[l]+lc[l]+wd/2,y2=ry[r]+rc[r]+wd/2;lc[l]+=wd;rc[r]+=wd;el('path',{d:'M172 '+y1+' C380 '+y1+',380 '+y2+',588 '+y2,fill:'none',stroke:c,'stroke-width':wd,opacity:.4})});
+Ln.forEach((n,i)=>{el('rect',{x:160,y:ly[i],width:12,height:lo[i],fill:C.sql,rx:2});el('text',{x:152,y:ly[i]+lo[i]/2+4,'text-anchor':'end','font-size':13,fill:'currentColor','font-family':'Bricolage Grotesque,sans-serif'},n[0]+' · '+f(n[1]))});
+Rn.forEach((n,i)=>{el('rect',{x:588,y:ry[i],width:12,height:ri[i],fill:n[2],rx:2});el('text',{x:608,y:ry[i]+ri[i]/2+(n[3]?0:4),'font-size':13,fill:'currentColor','font-family':'Bricolage Grotesque,sans-serif'},n[0]+' · '+f(n[1]));if(n[3])el('text',{x:608,y:ry[i]+ri[i]/2+15,'font-size':11,fill:C.mut,'font-family':'Bricolage Grotesque,sans-serif'},n[3])});
+el('text',{x:172,y:14,'text-anchor':'end','font-size':11,fill:C.mut,'font-family':'IBM Plex Mono,monospace'},'MYSQL ROWS');el('text',{x:588,y:14,'font-size':11,fill:C.mut,'font-family':'IBM Plex Mono,monospace'},'MONGODB DOCUMENTS / NEO4J ELEMENTS')})();
+/* figure numbers and data-provenance chips */
+(function(){const LIVE={cPR:'computed live',cDeg:'computed live',cSC:'computed live',cComm:'computed live',cCC:'computed live',cLive:'measured live'},MODEL={cSim:'cost model',cSel:'cost model',cWarm:'illustrative'};let n=1;
+document.querySelectorAll('.card').forEach(c=>{const cv=c.querySelector('canvas'),x=c.querySelector('#heat,#hm,#sk'),k=cv?cv.id:x?x.id:null,h=c.querySelector('h3');if(!k||!h)return;
+if(k!=='cLive'){n++;h.insertAdjacentHTML('beforebegin','<span class="fig">Fig. '+n+'</span>')}
+const live=LIVE[k],t=live||MODEL[k]||'sample data';h.insertAdjacentHTML('beforeend','<span class="chip'+(live?' live':'')+'">'+t+'</span>')})})();
+</script>
+<script>
+/* ===== Live Streamlit embed: paste your deployed URL below ===== */
+const CONFIG={STREAMLIT_URL:""}; // e.g. "https://your-app.streamlit.app"
+(function(){const f=document.getElementById('mlframe'),n=document.getElementById('mlnote');
+if(CONFIG.STREAMLIT_URL){f.src=CONFIG.STREAMLIT_URL;
+n.innerHTML='Live app: <a href="'+CONFIG.STREAMLIT_URL+'">'+CONFIG.STREAMLIT_URL+'</a>'}
+else{f.style.display='none';
+n.innerHTML='No live app linked yet. Run it locally with '
++'<code>/opt/anaconda3/bin/streamlit run "streamlit_app/ml_app.py"</code> '
++'(then set CONFIG.STREAMLIT_URL to the local URL), or deploy <code>streamlit_app/ml_app.py</code> '
++'to Streamlit Cloud and paste the public URL into CONFIG near the bottom of this file.'}})();
+</script>
+</body>
+</html>
