@@ -31,6 +31,8 @@ p.lead{font-size:20px;color:var(--mut);max-width:62ch}p{max-width:68ch}
 .chart{position:relative;height:260px}
 .kpis{display:flex;flex-wrap:wrap;gap:36px;margin:32px 0 0}.kpis div{min-width:120px}.kpis b{display:block;font-size:34px;font-weight:800}.kpis span{color:var(--mut);font-size:14px}
 pre{background:var(--code);color:var(--codeink);padding:16px;border-radius:8px;overflow-x:auto;margin:0;line-height:1.55}
+pre.wrap{background:var(--surf);color:var(--ink);border:1px solid var(--line);white-space:pre-wrap;word-break:break-word;overflow-x:visible}
+pre.wrap .c{color:var(--mut)}
 .k{color:#7ea2ff}.s{color:#7ee0b3}.c{color:#7d8bb0}
 .tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}.tabs button{font:inherit;font-size:14px;padding:6px 12px;border:1px solid var(--line);background:var(--surf);color:var(--ink);border-radius:6px;cursor:pointer}
 .tabs button[aria-selected=true]{background:var(--ink);color:var(--bg)}
@@ -143,17 +145,21 @@ footer{max-width:1080px;margin:60px auto 40px;padding:0 24px;color:var(--mut);fo
 <tr><td>Neo4j version</td><td>[fill in]</td></tr>
 <tr><td>Dataset scale</td><td>[fill in]</td></tr>
 <tr><td>Repetitions per query</td><td>[fill in]</td></tr></table>
-<p class="note" style="margin-bottom:4px">Find them with (macOS; Linux equivalents in comments):</p><pre><span class="c"># CPU / cores / memory (macOS)</span>
+<p class="note" style="margin-bottom:4px">Find them with (macOS; Linux equivalents in comments):</p><pre class="wrap"><span class="c"># CPU / cores / memory (macOS)</span>
 sysctl -n machdep.cpu.brand_string; sysctl -n hw.ncpu
 system_profiler SPHardwareDataType | grep -E "Memory|Chip"
 <span class="c"># Linux: lscpu | grep -E "Model name|^CPU\(s\)"; free -g; lsblk</span>
 <span class="c"># database versions</span>
 mysql --version; mongod --version; cypher-shell --version</pre></div>
-<div class="card"><h3>Limits of the comparison</h3><p>What the numbers can and cannot say.</p><ul class="t">
-<li>Synthetic data and a single node: results show relative strengths, not absolute speeds.</li>
-<li>Engines differ in caching, drivers and durability defaults, so each was tuned to comparable settings.</li>
-<li>Each store was used for what it is built for; a workload one of them is poor at is a finding, not a bug.</li>
-<li>Results should be re-run on new hardware before being relied on.</li></ul></div>
+<div class="card"><h3>Limits of the comparison</h3><p>What the numbers can and cannot say.</p>
+<div style="border:1px solid var(--line);border-left:4px solid var(--mongo);border-radius:8px;padding:10px 12px;margin-top:10px;background:color-mix(in srgb,var(--mongo) 7%,#fff)"><b class="y">CAN say</b><ul class="t">
+<li>Relative strengths per workload: joins → MySQL, traversal → Neo4j, flexible docs → MongoDB.</li>
+<li>Where indexing and rewrites pay off (every claim measured before and after).</li>
+<li>Rough scaling shape from 1M to 100M rows.</li></ul></div>
+<div style="border:1px solid var(--line);border-left:4px solid var(--neo);border-radius:8px;padding:10px 12px;margin-top:10px;background:color-mix(in srgb,var(--neo) 7%,#fff)"><b class="n">CANNOT say</b><ul class="t">
+<li>Absolute production speeds: synthetic data, single node, one fixed seed.</li>
+<li>Sharding, replication lag or network cost: not measured.</li>
+<li>Anything about your hardware: engines were tuned comparably, so re-run before relying.</li></ul></div></div>
 <div class="card span2"><h3>Run order</h3><p>Outline of how a full run goes. Adapt names to your scripts.</p><pre><span class="c"># 1. start the three databases</span>
 docker compose up -d
 <span class="c"># 2. generate data from a fixed seed</span>
@@ -164,6 +170,10 @@ python load.py --all
 python bench.py --warmup 5 --runs 30
 <span class="c"># 5. produce medians, percentiles, charts</span>
 python report.py</pre></div>
+<div class="card"><h3>Before you start</h3><p>What the five steps assume.</p><ul class="t">
+<li>Docker running; ports <b>3306</b>, <b>27017</b>, <b>7687</b> free.</li>
+<li>Python with the three client drivers installed.</li>
+<li>~15 GB free for the 100M-row scale.</li></ul></div>
 </div>
 </section>
 
@@ -172,15 +182,15 @@ python report.py</pre></div>
 <p class="lead">ER model → functional dependencies → 3NF/BCNF, then analytics with CTEs, recursive CTEs and window functions.</p>
 <div class="grid">
 <div class="card"><h3>Schema (BCNF)</h3><p>Keys and relationships.</p>
-<svg viewBox="0 0 420 270" width="100%" role="img" aria-label="ER diagram" font-family="IBM Plex Mono,monospace" font-size="11" fill="currentColor">
-<g stroke="currentColor" fill="none"><rect x="5" y="10" width="120" height="70" rx="4"/><rect x="150" y="10" width="120" height="70" rx="4"/><rect x="295" y="10" width="120" height="70" rx="4"/><rect x="150" y="120" width="120" height="70" rx="4"/><rect x="295" y="120" width="120" height="70" rx="4"/><rect x="295" y="210" width="120" height="55" rx="4"/>
-<path d="M125 45H150M270 45H295M210 80V120M270 155H295M355 80V120M355 190V210"/></g>
+<svg viewBox="0 0 430 270" width="100%" role="img" aria-label="ER diagram" font-family="IBM Plex Mono,monospace" font-size="11" fill="currentColor">
+<g stroke="currentColor" fill="none"><rect x="5" y="10" width="120" height="70" rx="4"/><rect x="150" y="10" width="120" height="70" rx="4"/><rect x="295" y="10" width="120" height="70" rx="4"/><rect x="150" y="120" width="120" height="70" rx="4"/><rect x="295" y="120" width="120" height="70" rx="4"/><rect x="280" y="210" width="142" height="55" rx="4"/>
+<path d="M125 45H150M270 45H295M210 80V120M270 155H295M355 80V120M351 190V210"/></g>
 <g stroke="none"><text x="12" y="27" font-weight="600">customers</text><text x="12" y="45">PK id</text><text x="12" y="60">name, email</text><text x="12" y="74">city</text>
 <text x="157" y="27" font-weight="600">orders</text><text x="157" y="45">PK id</text><text x="157" y="60">FK customer_id</text><text x="157" y="74">placed_at, status</text>
 <text x="302" y="27" font-weight="600">order_items</text><text x="302" y="45">PK (order,prod)</text><text x="302" y="60">qty, unit_price</text>
 <text x="157" y="137" font-weight="600">payments</text><text x="157" y="155">PK id, FK order</text><text x="157" y="170">amount, method</text>
 <text x="302" y="137" font-weight="600">products</text><text x="302" y="155">PK id, sku</text><text x="302" y="170">FK category_id</text><text x="302" y="184">price</text>
-<text x="302" y="227" font-weight="600">categories</text><text x="302" y="245">PK id</text><text x="302" y="259">FK parent_id (self)</text></g></svg></div>
+<text x="287" y="227" font-weight="600">categories</text><text x="287" y="245">PK id</text><text x="287" y="259">FK parent_id (self)</text></g></svg></div>
 <div class="card"><h3>Revenue by category</h3><p>Output of the window-function report (sample data, £k).</p><div class="chart"><canvas id="cRev"></canvas></div></div>
 </div>
 <div class="card" style="margin-top:20px"><h3>Query gallery</h3>
