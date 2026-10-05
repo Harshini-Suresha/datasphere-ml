@@ -82,9 +82,9 @@ st.write("Each prediction fuses **MySQL** order history, **MongoDB** catalogue/r
          "shape and **Neo4j** graph centrality — the point of the polyglot design. "
          "Feature badges show where every input comes from.")
 
-tab1, tab2, tab3, tab_cal, tab_shap, tab_data = st.tabs(
+tab1, tab2, tab3, tab_cal, tab_shap, tab_data, tab_lab = st.tabs(
     ["High-value customer", "Order amount", "Review rating",
-     "Calibration", "Why? (SHAP)", "Data quality"])
+     "Calibration", "Why? (SHAP)", "Data quality", "Training lab"])
 
 with tab1:
     st.header("Will this customer land in the top 20% of spenders?")
@@ -262,3 +262,57 @@ with tab_data:
         st.write(f"Graph: mean degree {dd['degree']['mean']}, p90 {dd['degree']['p90']}, "
                  f"max {dd['degree']['max']} — hub-and-spoke, as designed. "
                  f"Order categories: {dd['order_category_mix']}")
+
+with tab_lab:
+    st.header("Training lab — retrain live, break things safely")
+    st.write("The predictor tabs use frozen committed models. Here you regenerate the "
+             "data with your own seed, noise and size, retrain, and compare against "
+             "the committed best. Nothing here overwrites the saved models.")
+    import sys as _sys
+    _sys.path.insert(0, str(HERE.parent))
+    c1, c2, c3 = st.columns(3)
+    seed = c1.number_input("Seed", 1, 9999, 7)
+    n_cust = c1.select_slider("Customers", [1000, 2000, 5000], value=2000)
+    noise = c2.slider("Label noise σ (higher = harder)", 0.0, 0.6, 0.3, step=0.05)
+    trees = c3.select_slider("Trees per model", [30, 60, 120], value=60)
+    fams = c3.multiselect("Families", ["rf", "xgb", "lgbm"], default=["rf", "xgb"])
+    if st.button("Retrain now", type="primary"):
+        import numpy as _np
+        from sklearn.model_selection import train_test_split as _tts
+        import train_models as _T
+        with st.spinner("Generating data + training (fast grid, ~20–40s)…"):
+            cust = _T.gen_customers(n=n_cust, seed=seed)
+            # re-apply noisy label with chosen sigma
+            rng = _np.random.default_rng(seed)
+            score = _np.log(cust["total_spent"].values) + rng.normal(0, noise, len(cust))
+            cust["high_value"] = (score >= _np.quantile(score, 0.8)).astype(int)
+            feats = metrics["features"]["customer"]
+            Xtr, Xte, ytr, yte = _tts(cust[feats], cust["high_value"], test_size=0.2,
+                                      stratify=cust["high_value"], random_state=seed)
+            import sklearn.ensemble as _e
+            cands = {"rf": _e.RandomForestClassifier(n_estimators=trees, n_jobs=-1, random_state=seed)}
+            if "xgb" in fams and _T.HAS_XGB:
+                from xgboost import XGBClassifier as _X
+                cands["xgb"] = _X(n_estimators=trees, max_depth=6, learning_rate=0.08,
+                                  subsample=0.9, colsample_bytree=0.9, n_jobs=-1, random_state=seed)
+            if "lgbm" in fams and _T.HAS_LGB:
+                from lightgbm import LGBMClassifier as _L
+                cands["lgbm"] = _L(n_estimators=trees, num_leaves=63, n_jobs=-1,
+                                   random_state=seed, verbose=-1)
+            from sklearn.metrics import accuracy_score as _acc, roc_auc_score as _auc
+            from sklearn.pipeline import Pipeline as _Pipe
+            rows = []
+            for name, est in cands.items():
+                pipe = _Pipe([("enc", _T.enc(Xtr, ["city", "fav_category"])), ("m", est)])
+                pipe.fit(Xtr, ytr)
+                p = pipe.predict_proba(Xte)[:, 1]
+                rows.append({"family": name, "live_auc": round(float(_auc(yte, p)), 4),
+                             "live_acc": round(float(_acc(yte, p > 0.5)), 4)})
+            live = pd.DataFrame(rows)
+            st.subheader("Your retrain vs committed best (customer task, held-out)")
+            st.dataframe(live)
+            st.caption(f"Committed best ({metrics['customer']['best']}): "
+                       f"AUC {max(v['roc_auc'] for v in metrics['customer']['models'].values())} · "
+                       f"your noise σ={noise}, seed={seed}, n={n_cust}. "
+                       "Crank the noise up and watch AUC fall — that gap is the lesson.")
+            st.session_state["lab_live"] = live.to_dict("records")
