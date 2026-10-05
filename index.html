@@ -138,8 +138,17 @@ footer{max-width:1080px;margin:60px auto 40px;padding:0 24px;color:var(--mut);fo
 <tr><td>Scalability</td><td>Repeat at growing dataset sizes</td></tr></table></div>
 <div class="card"><h3>Test environment</h3><p>Fill these in with your own setup before publishing.</p><table>
 <tr><td>CPU / cores</td><td>[fill in]</td></tr><tr><td>Memory</td><td>[fill in]</td></tr><tr><td>Storage</td><td>[fill in]</td></tr>
-<tr><td>MySQL version</td><td>[fill in]</td></tr><tr><td>MongoDB version</td><td>[fill in]</td></tr><tr><td>Neo4j version</td><td>[fill in]</td></tr>
-<tr><td>Repetitions per query</td><td>[fill in]</td></tr></table></div>
+<tr><td>OS</td><td>[fill in]</td></tr>
+<tr><td>MySQL version</td><td>[fill in]</td></tr><tr><td>MongoDB version</td><td>[fill in]</td></tr>
+<tr><td>Neo4j version</td><td>[fill in]</td></tr>
+<tr><td>Dataset scale</td><td>[fill in]</td></tr>
+<tr><td>Repetitions per query</td><td>[fill in]</td></tr></table>
+<p class="note" style="margin-bottom:4px">Find them with (macOS; Linux equivalents in comments):</p><pre><span class="c"># CPU / cores / memory (macOS)</span>
+sysctl -n machdep.cpu.brand_string; sysctl -n hw.ncpu
+system_profiler SPHardwareDataType | grep -E "Memory|Chip"
+<span class="c"># Linux: lscpu | grep -E "Model name|^CPU\(s\)"; free -g; lsblk</span>
+<span class="c"># database versions</span>
+mysql --version; mongod --version; cypher-shell --version</pre></div>
 <div class="card"><h3>Limits of the comparison</h3><p>What the numbers can and cannot say.</p><ul class="t">
 <li>Synthetic data and a single node: results show relative strengths, not absolute speeds.</li>
 <li>Engines differ in caching, drivers and durability defaults, so each was tuned to comparable settings.</li>
