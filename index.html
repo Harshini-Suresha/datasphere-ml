@@ -61,6 +61,12 @@ footer{max-width:1080px;margin:60px auto 40px;padding:0 24px;color:var(--mut);fo
 <section style="padding-top:56px">
 <h1>One dataset.<br>Three databases.</h1>
 <p class="lead">DataSphere stores an e-commerce platform's data where it fits best: orders in MySQL, flexible product and review documents in MongoDB, and the customer–product–friend network in Neo4j. Then it measures what each choice costs.</p>
+<p style="display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 0">
+<a href="https://github.com/Harshini-Suresha/datasphere-ml" style="font:inherit;font-weight:600;padding:9px 18px;border-radius:6px;background:var(--ink);color:#fff;text-decoration:none">GitHub repo</a>
+<a href="https://colab.research.google.com/github/Harshini-Suresha/datasphere-ml/blob/main/notebooks/datasphere_ml_demo.ipynb" style="font:inherit;font-weight:600;padding:9px 18px;border-radius:6px;background:#F9AB00;color:#000;text-decoration:none">Open in Colab</a>
+<a href="https://raw.githubusercontent.com/Harshini-Suresha/datasphere-ml/main/notebooks/datasphere_ml_demo.ipynb" download style="font:inherit;font-weight:600;padding:9px 18px;border-radius:6px;background:var(--surf);color:var(--ink);text-decoration:none;border:1px solid var(--line)">Download .ipynb</a>
+<a href="https://datasphere-ml-i9nv6eofsxkupnbfsdnqrx.streamlit.app/" style="font:inherit;font-weight:600;padding:9px 18px;border-radius:6px;background:var(--sql);color:#fff;text-decoration:none">Streamlit app</a>
+</p>
 <div class="kpis"><div><b style="color:var(--sql)">MySQL</b><span>structured, transactional</span></div><div><b style="color:var(--mongo)">MongoDB</b><span>semi-structured, flexible</span></div><div><b style="color:var(--neo)">Neo4j</b><span>highly connected</span></div></div>
 <h3 style="margin-top:36px">One network, six views: drag a node, click to inspect</h3>
 <div class="trio">
@@ -503,7 +509,7 @@ read(B) write(B)
 <label>Recency (days) <input id="cr-reviewer_recency" type="number" value="30"></label>
 </div><p style="margin-top:10px"><button class="btn" onclick="calcR()">Predict</button> <b id="outR"></b></p></div>
 </div>
-<div class="card"><h3>Try the models</h3><p>Customer value, order amount and rating predictors in one app.</p>
+<div class="card"><h3>Try the models</h3><p>Customer value, order amount and rating predictors in one app. Prefer notebooks? <a href="https://colab.research.google.com/github/Harshini-Suresha/datasphere-ml/blob/main/notebooks/datasphere_ml_demo.ipynb">Open in Colab</a> or <a href="https://raw.githubusercontent.com/Harshini-Suresha/datasphere-ml/main/notebooks/datasphere_ml_demo.ipynb" download>download the .ipynb</a>.</p>
 <p class="note">Code: <a href="https://github.com/Harshini-Suresha/datasphere-ml">Harshini-Suresha/datasphere-ml</a> · Live: <a href="https://datasphere-ml-i9nv6eofsxkupnbfsdnqrx.streamlit.app/">Streamlit app</a></p>
 <iframe id="mlframe" title="DataSphere ML predictor (Streamlit)" style="width:100%;height:760px;border:1px solid var(--line);border-radius:10px;background:#fff" loading="lazy"></iframe>
 <p class="note" id="mlnote"></p></div>

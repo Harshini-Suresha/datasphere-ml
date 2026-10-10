@@ -10,6 +10,12 @@ pinned: false
 
 # DataSphere ML — polyglot predictors
 
+[![Website](https://img.shields.io/badge/website-live-brightgreen)](https://harshini-suresha.github.io/datasphere-ml/)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Harshini-Suresha/datasphere-ml/blob/main/notebooks/datasphere_ml_demo.ipynb)
+[![Streamlit App](https://img.shields.io/badge/streamlit-app-red)](https://datasphere-ml-i9nv6eofsxkupnbfsdnqrx.streamlit.app/)
+
+**Live links:** [Website (github.io)](https://harshini-suresha.github.io/datasphere-ml/) · [Colab notebook](https://colab.research.google.com/github/Harshini-Suresha/datasphere-ml/blob/main/notebooks/datasphere_ml_demo.ipynb) · [Download .ipynb](https://raw.githubusercontent.com/Harshini-Suresha/datasphere-ml/main/notebooks/datasphere_ml_demo.ipynb) · [Streamlit app](https://datasphere-ml-i9nv6eofsxkupnbfsdnqrx.streamlit.app/) · [GitHub repo](https://github.com/Harshini-Suresha/datasphere-ml)
+
 Three models trained on one synthetic e-commerce dataset spanning MySQL-style
 orders, MongoDB-style catalogue/reviews and Neo4j-style graph centrality:
 
